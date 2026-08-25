@@ -1,0 +1,58 @@
+variable "project_id" {
+  type = string
+}
+
+variable "region" {
+  type = string
+}
+
+variable "env" {
+  type = string
+}
+
+
+variable "toolbox_identity_roles" {
+  type = list(string)
+  default = [
+    "roles/alloydb.client",
+    # "roles/secretmanager.secretAccessor",
+    "roles/serviceusage.serviceUsageConsumer",
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+  ]
+  description = "Project-level IAM roles for toolbox-identity"
+}
+
+variable "agent_runtime_roles" {
+  type = list(string)
+  default = [
+    "roles/aiplatform.user",
+    "roles/modelarmor.user"
+  ]
+  description = "Project-level IAM roles for the agent runtime identity"
+}
+
+variable "bastion_roles" {
+  type = list(string)
+  default = [
+    "roles/alloydb.client",                    # alloydb.instances.connect, psql connection
+    "roles/alloydb.viewer",                    # alloydb.instances.get, describe to fetch IP
+    "roles/serviceusage.serviceUsageConsumer", # Required by AlloyDB connector
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+  ]
+  description = "Minimal IAM roles for the Bastion VM, avoiding default compute SA"
+}
+
+# secret manager
+variable "alloydb_password" {
+  type        = string
+  sensitive   = true
+  description = "AlloyDB password written to Secret Manager via TF_VAR_... environment variable."
+}
+
+variable "tools_yaml_path" {
+  type        = string
+  description = "File path to MCP Toolbox tools.yaml, e.g., ../../../gamaplay_agent/mcps/dev/toolbox_alloydb.yaml"
+}
+
