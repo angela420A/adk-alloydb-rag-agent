@@ -65,14 +65,20 @@ output "dns_model_armor_domain" {
 
 
 # GCS
-output "agent_artifacts_bucket" {
-  description = "GCS bucket URL for Agent Runtime artifacts (gs://...)"
-  value       = module.gcs.bucket_url
-}
+# output "agent_artifacts_bucket" {
+#   description = "GCS bucket URL for Agent Runtime artifacts (gs://...)"
+#   value       = module.gcs.bucket_url
+# }
 
-output "agent_artifacts_bucket_name" {
-  description = "GCS bucket name for Agent Runtime artifacts"
-  value       = module.gcs.bucket_name
+# output "agent_artifacts_bucket_name" {
+#   description = "GCS bucket name for Agent Runtime artifacts"
+#   value       = module.gcs.bucket_name
+# }
+
+# Storage
+output "logs_bucket_name" {
+  description = "GCS bucket name for Agent Runtime"
+  value       = module.storage.logs_bucket_name
 }
 
 

@@ -55,18 +55,3 @@ resource "google_alloydb_instance" "primary" {
     record_client_address   = false
   }
 }
-
-
-# Set AlloyDB Google-managed service agent
-resource "google_project_service_identity" "alloydb" {
-  provider = google-beta
-
-  project = var.project_id
-  service = "alloydb.googleapis.com"
-}
-
-resource "google_project_iam_member" "alloydb_vertex_ai" {
-  project = var.project_id
-  role    = "roles/aiplatform.user"
-  member  = google_project_service_identity.alloydb.member
-}

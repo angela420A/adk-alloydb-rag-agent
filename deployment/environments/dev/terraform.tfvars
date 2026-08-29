@@ -1,6 +1,7 @@
-project_id = "qaaisys"
-region     = "us-central1"
-zone       = "us-central1-a"
+project_name = "gamaplay-agent-dev"
+project_id   = "qaaisys"
+region       = "us-central1"
+zone         = "us-central1-a"
 
 # network----
 # VCP subnet IP range

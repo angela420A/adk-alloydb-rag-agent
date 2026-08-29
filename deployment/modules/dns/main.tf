@@ -52,16 +52,3 @@ resource "google_dns_record_set" "model_armor" {
   ttl          = 300
   rrdatas      = [var.psc_model_armor_ip]
 }
-
-
-# For Agent to set the DNS Peering
-data "google_project" "this" {
-  project_id = var.project_id
-}
-
-resource "google_project_iam_member" "vertex_ai_dns_peer" {
-  project = var.project_id
-
-  role   = "roles/dns.peer"
-  member = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-aiplatform.iam.gserviceaccount.com"
-}

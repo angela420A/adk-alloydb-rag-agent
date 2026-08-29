@@ -1,3 +1,7 @@
+variable "project_name" {
+  type = string
+}
+
 variable "project_id" {
   type = string
 }
@@ -129,7 +133,9 @@ variable "agent_platform_one_services" {
     "modelarmor.googleapis.com",
     "monitoring.googleapis.com",
     "notebooks.googleapis.com",
-    "observability.googleapis.com"
+    "observability.googleapis.com",
+    "bigquery.googleapis.com",
+    "serviceusage.googleapis.com"
   ]
 }
 

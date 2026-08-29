@@ -60,18 +60,3 @@ resource "google_compute_network_attachment" "agent_runtime" {
     ignore_changes = [producer_accept_lists]
   }
 }
-
-
-
-# Set IAM for Vertex AI service agent for PSC Attachment
-# So Google Tenant Project be add into mine Network Attachment (Accepted List)
-data "google_project" "this" {
-  project_id = var.project_id
-}
-
-resource "google_project_iam_member" "vertex_ai_psc_network_user" {
-  project = var.project_id
-
-  role   = "roles/compute.networkAdmin"
-  member = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-aiplatform.iam.gserviceaccount.com"
-}

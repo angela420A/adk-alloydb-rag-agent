@@ -108,5 +108,8 @@ variable "database_flags" {
     # ScaNN preview features: auto index maintenance, deferred index creation,
     # four-level tree indexes. Restarts the instance.
     "scann.enable_preview_features" = "on"
+
+    # Session display timezone for TIMESTAMPTZ output (does NOT change stored UTC data)
+    "timezone" = "Asia/Taipei"
   }
 }

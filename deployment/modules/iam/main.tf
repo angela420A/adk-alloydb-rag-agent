@@ -1,3 +1,55 @@
+# Google-managed service account
+# -------------------------
+data "google_project" "this" {
+  project_id = var.project_id
+}
+
+resource "google_project_service_identity" "vertex_sa" {
+  provider = google-beta
+  project  = var.project_id
+  service  = "aiplatform.googleapis.com"
+}
+
+resource "google_project_service_identity" "alloydb_sa" {
+  provider = google-beta
+
+  project = var.project_id
+  service = "alloydb.googleapis.com"
+}
+
+
+# Set member roles (Google-managed SA)
+# -------------------------
+resource "google_project_iam_member" "default_compute_sa_storage_object_creator" {
+  project = var.project_id
+  role    = "roles/cloudbuild.builds.builder"
+  member  = "serviceAccount:${data.google_project.this.number}-compute@developer.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "default_ai_platform_sa" {
+  for_each = toset(var.default_ai_platform_sa_roles)
+
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:service-${data.google_project.this.number}@gcp-sa-aiplatform.iam.gserviceaccount.com"
+}
+
+resource "google_project_iam_member" "vertex_ai_sa_permissions" {
+  for_each = toset(var.agent_runtime_roles)
+
+  project = var.project_id
+  role    = each.value
+  member  = google_project_service_identity.vertex_sa.member
+}
+
+resource "google_project_iam_member" "alloydb_sa_permissions" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  member  = google_project_service_identity.alloydb_sa.member
+}
+
+
+
 # Service Account
 # -------------------------
 # Toolbox Cloud Run
@@ -24,7 +76,7 @@ resource "google_service_account" "bastion" {
 }
 
 
-# Set member roles
+# Set member roles (SA)
 # -------------------------
 # cloud run - Toolbox
 resource "google_project_iam_member" "toolbox_identity" {

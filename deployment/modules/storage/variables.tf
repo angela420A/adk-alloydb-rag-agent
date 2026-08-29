@@ -1,3 +1,7 @@
+variable "project_name" {
+  type = string
+}
+
 variable "project_id" {
   type = string
 }
@@ -13,6 +17,11 @@ variable "env" {
 variable "agent_runtime_email" {
   type        = string
   description = "Agent Runtime service account email granted object access on the artifact bucket"
+}
+
+variable "vertex_ai_sa_email" {
+  type        = string
+  description = "The Google-managed Vertex AI (AI Platform) service account email"
 }
 
 

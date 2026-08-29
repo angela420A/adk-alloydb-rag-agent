@@ -1,3 +1,9 @@
+# Google-managed service account
+output "vertex_ai_sa_email" {
+  description = "Service account email of the Google-managed Vertex AI service identity"
+  value       = google_project_service_identity.vertex_sa.email
+}
+
 # cloud run - toolbox
 output "toolbox_identity_email" {
   description = "Cloud Run service account for Toolbox"

@@ -11,6 +11,15 @@ variable "env" {
 }
 
 
+variable "default_ai_platform_sa_roles" {
+  type = list(string)
+  default = [
+    "roles/dns.peer",            # For Agent to set the DNS Peering
+    "roles/compute.networkAdmin" # For Agent (Google Tenant Project) can add own Project Network Attachment (add in Accepted List)
+  ]
+  description = "Project-level IAM roles for Google-managed AI Platform service account"
+}
+
 variable "toolbox_identity_roles" {
   type = list(string)
   default = [
@@ -27,7 +36,11 @@ variable "agent_runtime_roles" {
   type = list(string)
   default = [
     "roles/aiplatform.user",
-    "roles/modelarmor.user"
+    "roles/modelarmor.user",
+    "roles/logging.logWriter",
+    "roles/cloudtrace.agent",
+    # "roles/storage.admin",
+    "roles/serviceusage.serviceUsageConsumer"
   ]
   description = "Project-level IAM roles for the agent runtime identity"
 }

@@ -78,6 +78,11 @@ resource "google_cloud_run_v2_service" "toolbox" {
       }
 
       env {
+        name  = "TZ"
+        value = "Asia/Taipei"
+      }
+
+      env {
         name  = "GOOGLE_CLOUD_LOCATION"
         value = var.region
       }
@@ -125,6 +130,8 @@ resource "google_cloud_run_v2_service" "toolbox" {
   }
 }
 
+
+# Set Cloud Run Invoker permission
 resource "google_cloud_run_v2_service_iam_member" "invokers" {
   for_each = toset(local.invoker_members)
 

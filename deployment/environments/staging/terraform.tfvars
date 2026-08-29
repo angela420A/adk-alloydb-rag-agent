@@ -1,6 +1,7 @@
-project_id = "pl-agent-dev"
-region     = "asia-southeast1"
-zone       = "asia-southeast1-a"
+project_name = "gamaplay-agent-staging"
+project_id   = "pl-agent-dev"
+region       = "asia-southeast1"
+zone         = "asia-southeast1-a"
 
 # network----
 # VCP subnet IP range

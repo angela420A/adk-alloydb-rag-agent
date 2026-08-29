@@ -123,14 +123,40 @@ module "compute" {
   depends_on = [google_project_service.enable, module.network, module.iam]
 }
 
-
-module "gcs" {
-  source     = "../../modules/gcs"
-  project_id = var.project_id
-  region     = var.region
-  env        = var.env
+module "storage" {
+  source       = "../../modules/storage"
+  project_name = var.project_name
+  project_id   = var.project_id
+  region       = var.region
+  env          = var.env
 
   agent_runtime_email = module.iam.agent_runtime_email
+  vertex_ai_sa_email  = module.iam.vertex_ai_sa_email
 
   depends_on = [google_project_service.enable, module.iam]
+}
+
+module "agent_runtime" {
+  source       = "../../modules/agent_runtime"
+  project_name = var.project_name
+  project_id   = var.project_id
+  region       = var.region
+  env          = var.env
+
+  service_account_email = module.iam.agent_runtime_email
+  logs_data_bucket_name = module.storage.logs_bucket_name
+
+  depends_on = [google_project_service.enable, module.iam, module.storage]
+}
+
+module "bigquery" {
+  source       = "../../modules/bigquery"
+  project_name = var.project_name
+  project_id   = var.project_id
+  region       = var.region
+  env          = var.env
+
+  logs_bucket_name = module.storage.logs_bucket_name
+
+  depends_on = [google_project_service.enable, module.storage]
 }

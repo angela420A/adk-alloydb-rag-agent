@@ -41,6 +41,7 @@ resource "google_compute_instance" "bastion" {
     set -euo pipefail
     apt-get update
     apt-get install --yes postgresql-client
+    timedatectl set-timezone Asia/Taipei
   EOT
 
   metadata = {
@@ -57,7 +58,7 @@ resource "google_compute_instance" "bastion" {
 }
 
 
-# Set Compute IAM permission
+# Set Compute engine who can access Postgres permission
 # Project Level----
 # Note: Users still require basic read permissions at the project level to query VM status via gcloud
 resource "google_project_iam_member" "compute_viewer" {
