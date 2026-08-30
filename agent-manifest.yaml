@@ -1,6 +1,0 @@
-name: gamaplay-agent
-generated_at: 
-create_params:
-  deployment_target: agent_runtime
-  agent_directory: gamaplay_agent
-  

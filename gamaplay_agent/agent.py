@@ -28,10 +28,6 @@ logging.basicConfig(
     format='%(asctime)s[%(name)s] [%(levelname)s]: %(message)s'
 )
 
-# toolset = ToolboxToolset(server_url="http://127.0.0.1:7000")
-# toolset = ToolboxToolset(server_url="http://136.110.163.230/toolbox/")
-# TOOLBOX_URL = "https://toolbox-scm-agent-482961808547.us-central1.run.app"
-
 TOOLBOX_URI = os.getenv('TOOLBOX_URI', '')
 
 toolset = ToolboxToolset(
@@ -55,7 +51,7 @@ def _init_agent_platform() -> None:
             )
     except Exception as e:
         logging.warning(f'Failed to initialize GCP: {e}')
-    os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "asia-east1")
+    os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "asia-southeast1")
     os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 

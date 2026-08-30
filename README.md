@@ -1,6 +1,47 @@
 # GamaPlay Agent
 
-An AI Agent service for the GamaPlay platform, built with Google Agent Development Kit (ADK), Google GenAI / Vertex AI, and Model Armor security guardrails.
+An AI Customer Support Agent platform built with Google Agent Development Kit (ADK), Google Cloud Vertex AI Agent Runtime, AlloyDB (pgvector + hybrid search), Model Context Protocol (MCP) Toolbox, and Model Armor security guardrails.
+
+---
+
+## 🏛️ Architecture Overview
+
+```
+                      ┌─────────────────────────────────┐
+                      │          User / Client          │
+                      └────────────────┬────────────────┘
+                                       │
+                                       ▼
+                      ┌─────────────────────────────────┐
+                      │   Vertex AI Agent Engine        │
+                      │   (AdkApp / Agent Runtime)      │
+                      │   • Python 3.13                 │
+                      │   • OpenTelemetry Telemetry     │
+                      │   • Model Armor Plugin          │
+                      └───────┬─────────────────┬───────┘
+                              │                 │
+            (Private PSC / DNS)                 │ (Vertex AI API)
+                              ▼                 ▼
+          ┌───────────────────────┐   ┌───────────────────────┐
+          │ Cloud Run MCP Toolbox │   │  Gemini 2.5 Flash     │
+          │ • AlloyDB Connector   │   │  (LLM Reasoning)      │
+          │ • Tools Definition    │   └───────────────────────┘
+          └───────────┬───────────┘
+                      │ (Private PSA)
+                      ▼
+          ┌───────────────────────┐
+          │  AlloyDB for Postgre  │
+          │  • pgvector / ScaNN   │
+          │  • GIN Hybrid Search  │
+          │  • google_ml_integ    │
+          └───────────────────────┘
+```
+
+- **Agent Framework** ([`gamaplay_agent/`](gamaplay_agent)): Built on Google ADK (`google-adk`), wrapped in `AdkApp` for Vertex AI Reasoning Engine deployment.
+- **Knowledge Retrieval**: Knowledge base articles stored in AlloyDB with multi-lingual embeddings (`text-multilingual-embedding-002`) and ScaNN vector indexing.
+- **Tool Protocol**: Database queries orchestrated via Model Context Protocol (MCP) Toolbox hosted on Cloud Run.
+- **Security & Guardrails**: Integrated [`ModelArmorPlugin`](gamaplay_agent/plugins/model_armor.py) for prompt sanitization, jailbreak prevention, and response verification.
+- **Infrastructure as Code** ([`deployment/`](deployment)): Fully automated Terraform modules for multi-environment (`dev`, `staging`, `prod`) provisioning.
 
 ---
 
@@ -10,7 +51,7 @@ An AI Agent service for the GamaPlay platform, built with Google Agent Developme
 
 - **Python**: `>= 3.13`
 - **Package Manager**: [`uv`](https://docs.astral.sh/uv/)
-- **Google Cloud SDK**: [`gcloud`](https://cloud.google.com/sdk/docs/install) CLI configured with appropriate permissions
+- **Google Cloud SDK**: [`gcloud`](https://cloud.google.com/sdk/docs/install) configured with Application Default Credentials (`gcloud auth application-default login`)
 
 ### Installation
 
@@ -22,94 +63,133 @@ uv sync
 
 ---
 
-## ⚙️ Environment Setup (Required First Step)
+## ⚙️ Environment Configuration
 
 > [!IMPORTANT]
-> **Always set `APP_ENV` before running any commands, agent utilities, or `Makefile` targets!**
-> 
+> **Always set `APP_ENV` before running any application commands or `Makefile` targets!**
+>
 > ```bash
-> export APP_ENV=dev          # Choose from: dev, staging, prod
+> export APP_ENV=dev          # Options: dev, staging, prod
 > ```
-> 
-> The application uses **Fail-Fast validation**: if `APP_ENV` is not set, the application will immediately halt to prevent running in the wrong environment.
+>
+> The application uses **fail-fast validation**: if `APP_ENV` is missing or invalid, execution immediately halts to protect against unintended environment operations.
 
-### Environment Variables Template (`.env.example`)
+### Environment File Setup
 
-Create your `.env.<APP_ENV>` file (e.g., `.env.dev`, `.env.staging`, `.env.prod`) by copying from [`.env.example`](.env.example):
+Copy the template to your target environment file and fill in required values:
 
 ```bash
 cp .env.example .env.dev
 ```
 
-Fill in the necessary values in your `.env.<APP_ENV>` file based on [`.env.example`](.env.example).
+Key environment parameters:
+
+| Variable | Description | Example Placeholder |
+| :--- | :--- | :--- |
+| `ROOT_MODEL` | Gemini LLM model identifier | `gemini-2.5-flash` |
+| `GOOGLE_CLOUD_PROJECT` | Target GCP Project ID | `<YOUR_GCP_PROJECT_ID>` |
+| `GOOGLE_CLOUD_LOCATION` | Target GCP Region | `<YOUR_GCP_REGION>` |
+| `MODEL_ARMOR_TEMPLATE_ID` | Model Armor template ID | `<YOUR_MODEL_ARMOR_TEMPLATE_ID>` |
+| `ALLOYDB_DATABASE` | Target AlloyDB database name | `<YOUR_ALLOYDB_DATABASE_NAME>` |
+| `TOOLBOX_URI` | Cloud Run MCP Toolbox service endpoint | `https://<YOUR_TOOLBOX_SERVICE_URI>` |
+| `AGENT_SERVICE_ACCOUNT` | Service account for Agent Runtime | `<YOUR_AGENT_SERVICE_ACCOUNT_EMAIL>` |
+| `LOGS_BUCKET_NAME` | GCS bucket for runtime telemetry logs | `<YOUR_LOGS_BUCKET_NAME>` |
+| `PSC_NETWORK_ATTACHMENT` | Private Service Connect attachment | `projects/<PROJECT_ID>/regions/<REGION>/networkAttachments/<ATTACHMENT_NAME>` |
 
 ---
 
 ## 🛠️ Makefile Commands
 
-All commands in the [`Makefile`](Makefile) require `APP_ENV` to be set in your environment.
+All Makefile targets automatically use the active `APP_ENV` configuration.
 
-### 1. Setup & Verification
+### 1. Verification
 
-Verify that your `APP_ENV` and corresponding `.env.${APP_ENV}` configuration are valid:
+Verify active environment variables and project configuration:
 
 ```bash
 export APP_ENV=dev
 make verify-env
 ```
 
-### 2. Agent Development (ADK)
+### 2. Local Agent Development (ADK Web UI)
 
-Run the agent locally with the ADK web interface:
+Run the agent interactively with the ADK local web console:
 
 ```bash
+export APP_ENV=dev
 make run-agent
 ```
-*(Executes: `uv run --env-file .env.${APP_ENV} adk web`)*
 
-### 3. MCP Toolbox for Databases
+### 3. Local MCP Toolbox for Databases
 
-Download and manage the MCP Toolbox binary locally:
+Download and run the MCP Toolbox locally for testing database tools:
 
-- **Download Toolbox binary**:
+- **Download Toolbox binary** (macOS ARM64):
   ```bash
   make toolbox-dw
   ```
-  *(Downloads version `v1.9.0` for macOS ARM64; check [mcp-toolbox releases](https://github.com/googleapis/mcp-toolbox/releases) for Linux or Windows builds)*
-
-- **Run Toolbox locally**:
+- **Run Toolbox CLI**:
   ```bash
   make toolbox
   ```
-
-- **Run Toolbox with Web UI**:
+- **Run Toolbox Web UI**:
   ```bash
   make toolbox-ui
   ```
-
-- **Run Toolbox on custom port (7000)**:
+- **Run Toolbox on Custom Port (7000)**:
   ```bash
   make toolbox-port
   ```
 
-### 4. Deploy Agent to Vertex AI / Agent Runtime
+### 4. Vertex AI Agent Engine Deployment
 
-Deploy the agent to Google Cloud Agent Runtime:
+Deploy the agent to Google Cloud Vertex AI Agent Runtime:
 
-- **Step 1: Create GCS Staging Bucket** (if it does not already exist):
+- **Dry-Run Validation** (Validates configuration and OpenAPI schemas without cloud changes):
   ```bash
-  make agent-bucket
+  export APP_ENV=dev
+  make agent-deploy-dry
   ```
-  *(Creates `gs://${GOOGLE_CLOUD_PROJECT}-agent-engine` with uniform bucket-level access and soft-delete retention)*
 
-- **Step 2: Deploy Agent**:
+- **Deploy / Update Agent**:
   ```bash
+  export APP_ENV=dev
   make agent-deploy
   ```
-  *(Exports dependencies and deploys the agent using `gamaplay_agent.utils.deploy`)*
+
+*(Under the hood, `make agent-deploy` generates `gamaplay_agent/utils/.requirements.txt` using `uv export` and executes `gamaplay_agent.utils.deploy` with idempotent create/update logic).*
 
 ---
 
-## 🏗️ Infrastructure & Deployment
+## 📁 Repository Structure
 
-Terraform configuration and database bootstrap instructions for AlloyDB and Cloud Run can be found in [`development/README.md`](development/README.md).
+```text
+├── .cloudbuild/                 # Cloud Build CI/CD pipeline definitions
+├── .env.example                 # Environment variables template
+├── Makefile                     # Developer workflow and deployment commands
+├── README.md                    # Root project documentation (this file)
+├── pyproject.toml               # Python project configuration and dependencies
+├── uv.lock                      # Locked dependency graph
+├── manifests/                   # Static Vertex AI Agent Runtime manifests
+│   ├── README.md                # Manifest schema & deployment guide
+│   └── agent-manifest.example.yaml
+├── gamaplay_agent/              # Core Agent Application source code
+│   ├── agent.py                 # ADK Agent definition & Toolset registration
+│   ├── agent_runtime_app.py     # Vertex AI AdkApp runtime wrapper & telemetry
+│   ├── prompt.py                # System instructions & knowledge base prompts
+│   ├── guards/                  # Custom security guards
+│   ├── plugins/                 # ADK plugins (e.g. ModelArmorPlugin)
+│   ├── mcps/                    # MCP Toolbox YAML configurations per environment
+│   └── utils/                   # Telemetry, typing, config, and deploy scripts
+└── deployment/                  # Infrastructure as Code (Terraform)
+    ├── README.md                # Infrastructure & AlloyDB bootstrap guide
+    ├── environments/            # Per-environment Terraform root configs (dev, staging, prod)
+    └── modules/                 # Modular Terraform components (VPC, AlloyDB, Cloud Run, etc.)
+```
+
+---
+
+## 📚 Detailed Documentation
+
+- 📖 [Infrastructure & AlloyDB Bootstrap Guide](deployment/README.md)
+- 📖 [Vertex AI Manifest & Runtime Configuration](manifests/README.md)

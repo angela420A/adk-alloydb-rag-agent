@@ -1,0 +1,41 @@
+# ==============================================================================
+# Vertex AI Agent Runtime Manifest Configuration (Template / Example)
+# Copy this file to agent-manifest.${APP_ENV}.yaml (e.g. agent-manifest.dev.yaml)
+#
+# Replace the placeholders below ({YOUR_...}) with your project-specific values.
+# Sample values are provided in the comments.
+# ==============================================================================
+
+# Agent / Engine Display Name (e.g. "my-cool-agent")
+name: "{YOUR_PROJECT_NAME}"
+
+# Root directory of your agent source code (e.g. "app")
+agent_directory: "{YOUR_AGENT_DIRECTORY}"
+
+# GCP Region for resource deployment (e.g. "us-central1" or "us-east1")
+region: "{YOUR_REGION}"
+
+# Whether this agent uses the Agent2Agent (A2A) protocol
+is_a2a: false
+
+# Python runtime version (e.g. "3.10", "3.11", "3.12", "3.13", "3.14")
+python_version: "3.13"
+
+# Agent Entrypoint configuration
+entrypoint:
+  # Python module containing the instantiated agent app (e.g. "app.agent_runtime_app")
+  module: "{YOUR_AGENT_DIRECTORY}.agent_runtime_app"
+
+  # Name of the instantiated AdkApp/Agent object variable (e.g. "agent_runtime")
+  object: "{YOUR_AGENT_RUNTIME_OBJECT}"
+
+  # Relative path to requirements.txt (e.g. "app/utils/.requirements.txt")
+  requirements_file: "{YOUR_AGENT_DIRECTORY}/utils/.requirements.txt"
+
+# Compute and scaling resources
+runtime_resources:
+  cpu: "4"
+  memory: "8Gi"
+  container_concurrency: 9
+  min_instances: 1
+  max_instances: 10

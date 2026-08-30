@@ -1,0 +1,15 @@
+name: "gamaplay-agent-staging"
+agent_directory: "gamaplay_agent"
+region: "asia-southeast1"
+is_a2a: false
+python_version: "3.13"
+entrypoint:
+  module: "gamaplay_agent.agent_runtime_app"
+  object: "agent_runtime"
+  requirements_file: "gamaplay_agent/utils/.requirements.txt"
+runtime_resources:
+  cpu: "4"
+  memory: "8Gi"
+  container_concurrency: 9
+  min_instances: 1
+  max_instances: 10
