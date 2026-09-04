@@ -1,14 +1,14 @@
 sources:
-    agent_kb_db:
-        kind: "alloydb-postgres"
-        project: "${GOOGLE_CLOUD_PROJECT}"
-        region: "${GOOGLE_CLOUD_LOCATION}"
-        cluster: "${ALLOYDB_CLUSTER}"
-        instance: "${ALLOYDB_INSTANCE}"
-        ipType: "private"
-        database: "${ALLOYDB_DATABASE}"
-        user: "${ALLOYDB_USER}"
-        password: "${ALLOYDB_PASSWORD}"
+  agent_kb_db:
+    kind: "alloydb-postgres"
+    project: "${GOOGLE_CLOUD_PROJECT}"
+    region: "${GOOGLE_CLOUD_LOCATION}"
+    cluster: "${ALLOYDB_CLUSTER}"
+    instance: "${ALLOYDB_INSTANCE}"
+    ipType: "private"
+    database: "${ALLOYDB_DATABASE}"
+    user: "${ALLOYDB_USER}"
+    password: "${ALLOYDB_PASSWORD}"
 
 tools:
   search_document_by_context:
@@ -37,6 +37,7 @@ tools:
       ORDER BY
         rag_documents.content_embedding <=> embedding('text-multilingual-embedding-002', $1)::vector
       LIMIT 5;
+
   search_categories:
     kind: postgres-sql
     source: agent_kb_db
@@ -44,8 +45,7 @@ tools:
     statement: |
       SELECT name FROM categories;
 
-
 toolsets:
-   supply_chain_toolset:
-     - search_document_by_context
-     - search_categories
+  supply_chain_toolset:
+    - search_document_by_context
+    - search_categories

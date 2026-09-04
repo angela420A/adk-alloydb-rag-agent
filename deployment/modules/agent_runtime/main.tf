@@ -58,10 +58,8 @@ resource "google_vertex_ai_reasoning_engine" "agent_runtime" {
     }
   }
 
-  # Prevent subsequent Terraform runs from overwriting the deployed agent code back to the dummy source after deploy.py runs.
+  # Prevent subsequent Terraform runs from modifying the agent runtime after deploy.py deploys the real agent.
   lifecycle {
-    ignore_changes = [
-      spec[0].source_code_spec,
-    ]
+    ignore_changes = all
   }
 }

@@ -39,6 +39,7 @@ variable "agent_runtime_roles" {
     "roles/modelarmor.user",
     "roles/logging.logWriter",
     "roles/cloudtrace.agent",
+    "roles/monitoring.metricWriter",
     # "roles/storage.admin",
     "roles/serviceusage.serviceUsageConsumer"
   ]

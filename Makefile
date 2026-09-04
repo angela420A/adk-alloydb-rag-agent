@@ -63,15 +63,4 @@ agent-deploy:
 	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > gamaplay_agent/utils/.requirements.txt 2>/dev/null && \
 	set -a; . ./.env.$${APP_ENV}; set +a; \
 	uv run --env-file .env.$${APP_ENV} -m gamaplay_agent.utils.deploy
-
-
-# 		--display-name=gamaplay-agent-$${APP_ENV} \
-# 		--identity-type=SERVICE_ACCOUNT
-
-# 		--service-account=${AGENT_SERVICE_ACCOUNT}
-
-
-# 		--staging-bucket=gs://${GOOGLE_CLOUD_PROJECT}-agent-engine \
-# 		--requirements-file=gamaplay_agent/utils/.requirements.txt \
-# 		--extra-packages=./gamaplay_agent \
 		
