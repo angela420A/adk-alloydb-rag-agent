@@ -82,6 +82,12 @@ variable "deletion_protection" {
   description = "dev: false, prod: true"
 }
 
+variable "min_instance_count" {
+  type        = number
+  default     = 0
+  description = "prod env can more"
+}
+
 variable "max_instance_count" {
   type        = number
   default     = 20
