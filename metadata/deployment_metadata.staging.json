@@ -6,5 +6,5 @@
   "service_account": "gamaplay-agent-staging@pl-agent-dev.iam.gserviceaccount.com",
   "agent_framework": "google-adk",
   "is_a2a": false,
-  "deployment_timestamp": "2026-09-09T11:59:55.200514+08:00"
+  "deployment_timestamp": "2026-09-09T18:39:42.060406+08:00"
 }
