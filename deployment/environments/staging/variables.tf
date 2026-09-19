@@ -100,6 +100,15 @@ variable "tools_yaml_path" {
 }
 
 
+# Cloud Run
+# (Optional)
+variable "min_instance_count" {
+  type        = number
+  default     = 1
+  description = "prod, staging env can more, to keep server keep running"
+}
+
+
 # Compute Engine - Postgres
 # (Optional)
 variable "enable_secure_boot" {

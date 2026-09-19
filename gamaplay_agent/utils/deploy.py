@@ -220,12 +220,8 @@ def _build_runtime_env_vars(
     """組裝 Agent Engine 執行期的環境變數。"""
     env_vars: dict[str,
                    Any] = {
-                       "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY":
-                           "true",
-                       "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT":
-                           "NO_CONTENT",
-                       "TZ":
-                           "Asia/Taipei",
+                       "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY": "true",
+                       "TZ": "Asia/Taipei",
                    }
 
     # 自動透傳常用環境變數
@@ -236,7 +232,8 @@ def _build_runtime_env_vars(
         "LOGS_BUCKET_NAME",
         "TOOLBOX_URI",
         "ALLOYDB_DATABASE",
-        "TZ"
+        "TZ",
+        "OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT",
     ]
     for key in passthrough_keys:
         val = os.getenv(key)

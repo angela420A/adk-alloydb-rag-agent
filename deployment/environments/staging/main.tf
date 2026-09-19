@@ -103,6 +103,8 @@ module "cloud_run" {
   alloydb_instance = module.alloydb.primary_instance_short_id
   alloydb_database = var.alloydb_database
 
+  min_instance_count = var.min_instance_count
+
   depends_on = [google_project_service.enable, module.iam, module.alloydb]
 }
 

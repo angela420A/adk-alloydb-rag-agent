@@ -21,7 +21,7 @@ from gamaplay_agent.utils import config
 from gamaplay_agent.plugins.model_armor import ModelArmorPlugin
 # from gamaplay_agent.guards.model_armor_guard import create_guard
 
-from gamaplay_agent.prompt import SYSTEM_INSTRUCTION
+from gamaplay_agent.prompt import SYSTEM_INSTRUCTION_2_5
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,6 +29,7 @@ logging.basicConfig(
 )
 
 TOOLBOX_URI = os.getenv('TOOLBOX_URI', '')
+# TOOLBOX_URI = "http://127.0.0.1:7000/"
 
 toolset = ToolboxToolset(
     server_url=TOOLBOX_URI,
@@ -61,7 +62,7 @@ def create_agent() -> Agent:
     return Agent(
         name='gamaplay_agent',
         model=config.MODELS.root_agent_model,
-        instruction=SYSTEM_INSTRUCTION,
+        instruction=SYSTEM_INSTRUCTION_2_5,
         tools=[toolset]
     )
 

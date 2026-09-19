@@ -1,5 +1,5 @@
 sources:
-  agent_kb_db:
+  gamaplay_agent_kb_stag:
     kind: "postgres"
     host: "127.0.0.1"
     port: "8888"
@@ -8,41 +8,33 @@ sources:
     password: "${TF_VAR_alloydb_password}"
 
 tools:
-  search_document_by_context:
+  search_faq_articles:
     kind: postgres-sql
-    source: agent_kb_db
-    description: Find document or article in the RAG Tables using language search and vector embeddings.
+    source: gamaplay_agent_kb_stag
+    description: "Search FAQ articles by semantic text query using Vertex AI vector embeddings. Returns the top 5 most relevant articles with article IDs, titles, clean markdown content, hyperlinks, image URLs, and metadata including brand name, category name, and section name."
     parameters:
       - name: search_text
         type: string
-        description: Description of the document or article the user is looking for.
+        description: "The user query, problem description, or search keywords to find relevant FAQ articles."
     statement: |
       SELECT
-        articles.zendesk_article_id,
-        rag_documents.content,
-        categories.name
-      FROM 
-        rag_documents
-      JOIN articles
-        on articles.id = rag_documents.source_id
-      JOIN sections
-        on sections.id = articles.section_id
-      JOIN categories
-        on categories.id = sections.category_id
-      JOIN brands
-        on brands.id = categories.brand_id
+        zendesk_article_id,
+        title,
+        content,
+        hyperlinks,
+        image_urls,
+        metadata ->> 'brand_name' as brand_name,
+        metadata ->> 'category_name' as category_name,
+        metadata ->> 'section_name' as section_name
+      FROM
+        rag_kb_documents
+      WHERE
+        is_deleted = FALSE AND source_type = 'faq_articles'
       ORDER BY
-        rag_documents.content_embedding <=> embedding('text-multilingual-embedding-002', $1)::vector
-      LIMIT 5;
-
-  search_categories:
-    kind: postgres-sql
-    source: agent_kb_db
-    description: Retrieve all available article categories from the database.
-    statement: |
-      SELECT name FROM categories;
+        content_embedding <=> embedding('text-multilingual-embedding-002', $1)::vector
+      LIMIT
+        5;
 
 toolsets:
-  supply_chain_toolset:
-    - search_document_by_context
-    - search_categories
+  faq_toolset:
+    - search_faq_articles
