@@ -130,6 +130,10 @@ Deploy the agent to Google Cloud Vertex AI Agent Runtime:
 
 *(Under the hood, `make agent-deploy` generates `agent/utils/.requirements.txt` using `uv export` and executes `agent.utils.deploy` with idempotent create/update logic).*
 
+After a successful deploy, `_write_deployment_metadata` in [`agent/utils/deploy.py`](agent/utils/deploy.py) automatically creates `metadata/deployment_metadata.${APP_ENV}.json` with the deployed agent runtime ID, display name, service account, environment, and timestamp. Use that file to inspect the latest deployment info for the active `APP_ENV`.
+
+See [`metadata/deployment_metadata.example.json`](metadata/deployment_metadata.example.json) for the metadata schema (keys only; values are filled at deploy time).
+
 ---
 
 ## 📁 Repository Structure
@@ -142,6 +146,8 @@ Deploy the agent to Google Cloud Vertex AI Agent Runtime:
 ├── images/                      # Architecture diagrams
 ├── pyproject.toml               # Python project configuration and dependencies
 ├── uv.lock                      # Locked dependency graph
+├── metadata/                    # Auto-generated deployment info (per APP_ENV)
+│   └── deployment_metadata.example.json  # Schema example (empty values)
 ├── manifests/                   # Static Vertex AI Agent Runtime manifests
 │   ├── README.md                # Manifest schema & deployment guide
 │   └── agent-manifest.example.yaml
