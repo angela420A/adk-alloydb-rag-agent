@@ -1,3 +1,6 @@
+# Packages
+.requirements.txt
+
 # Terraform
 .terraform/ 
 **/.terraform/
@@ -187,6 +190,14 @@ venv.bak/
 .env.dev
 .env.staging
 .env.prod
+
+# Generated deployment metadata (keep only the example schema)
+metadata/deployment_metadata.*.json
+!metadata/deployment_metadata.example.json
+
+# Local environment agent manifests (keep only the example)
+manifests/agent-manifest.*.yaml
+!manifests/agent-manifest.example.yaml
 
 # Support Tools
 GEMINI.md

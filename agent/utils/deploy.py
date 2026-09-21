@@ -222,7 +222,7 @@ def _build_runtime_env_vars(
     env_vars: dict[str,
                    Any] = {
                        "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY": "true",
-                       "TZ": "Asia/Taipei",
+                       "TZ": "UTC",
                    }
 
     # Auto-passthrough common environment variables
@@ -328,7 +328,7 @@ def _write_deployment_metadata(
         "is_a2a":
             is_a2a,
         "deployment_timestamp":
-            (datetime.now(ZoneInfo("Asia/Taipei")).isoformat()),
+            (datetime.now(ZoneInfo("UTC")).isoformat()),
     }
 
     with open(output_file, "w", encoding="utf-8") as f:

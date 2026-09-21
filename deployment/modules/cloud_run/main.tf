@@ -14,9 +14,9 @@ locals {
 
 resource "google_cloud_run_v2_service" "toolbox" {
   project     = var.project_id
-  name        = "toolbox-scm-agent-${var.env}"
+  name        = "toolbox-agentic-agent-${var.env}"
   location    = var.region
-  description = "The Toolbox for Service Center Management"
+  description = "MCP Toolbox for Databases (Agentic Agent)"
 
   ingress = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
 
@@ -80,7 +80,7 @@ resource "google_cloud_run_v2_service" "toolbox" {
 
       env {
         name  = "TZ"
-        value = "Asia/Taipei"
+        value = "UTC"
       }
 
       env {

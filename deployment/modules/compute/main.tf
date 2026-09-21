@@ -58,31 +58,32 @@ resource "google_compute_instance" "bastion" {
 }
 
 
-# Set Compute engine who can access Postgres permission
-# Project Level----
-# Note: Users still require basic read permissions at the project level to query VM status via gcloud
+# Bastion access IAM
+# Project-level viewer is still required for gcloud to query VM status.
 resource "google_project_iam_member" "compute_viewer" {
+  for_each = toset(var.bastion_access_members)
+
   project = var.project_id
   role    = "roles/compute.viewer"
-  # member  = "group:developers@yourcompany.com"
-  member = "user:angelakuo@gamania.com"
+  member  = each.value
 }
 
-# Resource Level----                                                                                                                                                                                                                                                                                                              
 resource "google_iap_tunnel_instance_iam_member" "bastion_iap" {
+  for_each = toset(var.bastion_access_members)
+
   project  = var.project_id
   zone     = var.zone
   instance = google_compute_instance.bastion.name
   role     = "roles/iap.tunnelResourceAccessor"
-  # member   = "group:developers@yourcompany.com"
-  member = "user:angelakuo@gamania.com"
+  member   = each.value
 }
 
 resource "google_compute_instance_iam_member" "bastion_oslogin" {
+  for_each = toset(var.bastion_access_members)
+
   project       = var.project_id
   zone          = var.zone
   instance_name = google_compute_instance.bastion.name
   role          = "roles/compute.osLogin"
-  # member        = "group:developers@yourcompany.com"
-  member = "user:angelakuo@gamania.com"
+  member        = each.value
 }

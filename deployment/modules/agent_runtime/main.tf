@@ -30,7 +30,7 @@ resource "google_vertex_ai_reasoning_engine" "agent_runtime" {
 
       env {
         name  = "TZ"
-        value = "Asia/Taipei"
+        value = "UTC"
       }
 
       env {

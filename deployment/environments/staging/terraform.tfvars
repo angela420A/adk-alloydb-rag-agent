@@ -1,8 +1,8 @@
 project_name = "agentic-agent-staging"
 # Replace {GOOGLE_CLOUD_PROJECT} with your GCP Project ID.
 project_id   = "{GOOGLE_CLOUD_PROJECT}"
-region       = "asia-southeast1"
-zone         = "asia-southeast1-a"
+region       = "us-central1"
+zone         = "us-central1-a"
 
 # network----
 # VCP subnet IP range

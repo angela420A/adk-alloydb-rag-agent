@@ -51,7 +51,7 @@ def _init_agent_platform() -> None:
       )
   except Exception as e:
     logging.warning(f'Failed to initialize GCP: {e}')
-  os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "asia-southeast1")
+  os.environ.setdefault("GOOGLE_CLOUD_LOCATION", "us-central1")
   os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
 

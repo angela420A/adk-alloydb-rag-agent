@@ -110,6 +110,6 @@ variable "database_flags" {
     "scann.enable_preview_features" = "on"
 
     # Session display timezone for TIMESTAMPTZ output (does NOT change stored UTC data)
-    "timezone" = "Asia/Taipei"
+    "timezone" = "UTC"
   }
 }

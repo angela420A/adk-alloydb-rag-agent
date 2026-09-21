@@ -152,8 +152,8 @@ dedup_across_traces AS (
 
 SELECT
   -- Core identifiers and timestamps
-  -- [MODIFIED] Change Time zone into Asia/Taipei
-  DATETIME(timestamp, "Asia/Taipei") AS timestamp,
+  -- Display timestamps in UTC
+  DATETIME(timestamp, "UTC") AS timestamp,
   insert_id,
   trace,
   span_id,

@@ -81,3 +81,9 @@ variable "network_tags" {
   type    = list(string)
   default = []
 }
+
+variable "bastion_access_members" {
+  type        = list(string)
+  description = "IAM members granted bastion access (e.g. user:you@example.com or group:devs@example.com). Replace before apply."
+  default     = ["group:developers@example.com"]
+}
