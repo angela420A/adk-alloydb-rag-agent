@@ -1,5 +1,3 @@
-from google import auth
-from google.adk.models import google_llm
 import os
 import logging
 from typing import Optional
@@ -9,9 +7,8 @@ from google.adk.models import LlmRequest, LlmResponse
 from google.api_core.client_options import ClientOptions
 from google.cloud import modelarmor_v1
 from google.genai import types
-from google.adk.plugins.base_plugin import BasePlugin
 
-from gamaplay_agent.utils import config
+from agent.utils import config
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +22,7 @@ def _extract_user_text(llm_request: LlmRequest) -> str:
                         if hasattr(part, "text") and part.text:
                             return part.text
     except Exception as e:
-        logger.error(f"[ModelArmorPlugin] Error extracting user text: {e}")
+        logger.error(f"[ModelArmorGuard] Error extracting user text: {e}")
     return ""
 
 
@@ -36,7 +33,7 @@ def _extract_model_response(llm_response: LlmResponse) -> str:
                 if hasattr(part, "text") and part.text:
                     return part.text
     except Exception as e:
-        logger.error(f"[ModelArmorPlugin] Error extracting model text: {e}")
+        logger.error(f"[ModelArmorGuard] Error extracting model text: {e}")
     return ""
 
 
@@ -106,45 +103,41 @@ def _get_matched_filters(result) -> list[str]:
     return matched_filters
 
 
-class ModelArmorPlugin(BasePlugin):
+class NoGuard:
 
-    def __init__(self):
-        super().__init__(name='model_armor_guard')
-        self.project_id = os.getenv('GOOGLE_CLOUD_PROJECT', None)
-        self.location = os.getenv('GOOGLE_CLOUD_LOCATION', None)
-        self.template_id = os.getenv('MODEL_ARMOR_TEMPLATE_ID', None)
+    def before_model_callback(
+        self,
+        callback_context: CallbackContext,
+        llm_request: LlmRequest
+    ) -> Optional[LlmResponse]:
+        return None
 
-        if not self.template_id:
-            logger.error(
-                "[ModelArmorPlugin] can't not find template_id in env, or .env file is not set."
-            )
-            raise ValueError(
-                "[ModelArmorPlugin] can't not find template_id in env, or .env file is not set.",
-                "Run ./setup/setup_env.sh first.",
-            )
+    def after_model_callback(
+        self,
+        callback_context: CallbackContext,
+        llm_response: LlmResponse
+    ) -> Optional[LlmResponse]:
+        return None
 
-        self.template_name = f"projects/{self.project_id}/locations/{self.location}/templates/{self.template_id}"
-        self._client = None  # 在初始化時不建立連線，僅設為 None
 
-        logger.info(
-            f"[ModelArmorPlugin] Initialized with template: {self.template_id}"
+class ModelArmorGuard:
+
+    def __init__(self, project_id: str, template_id: str, location: str):
+        self.project_id = project_id
+        self.template_id = template_id
+        self.location = location
+        self.template_name = f"projects/{self.project_id}/locations/{self.location}/templates/{self.template_id}",
+
+        self.client = modelarmor_v1.ModelArmorClient(
+            transport="rest",
+            client_options=ClientOptions(
+                api_endpoint=f"modelarmor.{self.location}.rep.googleapis.com"
+            ),
         )
 
-    @property
-    def client(self) -> modelarmor_v1.ModelArmorClient:
-        """
-        延遲載入（Lazy Initialization）
-        只有在 Runtime 實際被調用時，才會在當前環境中建立 ModelArmorClient
-        """
-        if self._client is None:
-            self._client = modelarmor_v1.ModelArmorClient(
-                transport="rest",
-                client_options=ClientOptions(
-                    api_endpoint=f"modelarmor.{self.location}.rep.googleapis.com"
-                    # api_endpoint=f"modelarmor.googleapis.com"
-                ),
-            )
-        return self._client
+        logger.info(
+            f"[ModelArmorGuard] Initialized with template: {self.template_id}"
+        )
 
     def _blocked(self, result) -> bool:
         try:
@@ -160,9 +153,8 @@ class ModelArmorPlugin(BasePlugin):
                     parts=[types.Part.from_text(text=message)])
         )
 
-    async def before_model_callback(
+    def before_model_callback(
         self,
-        *,
         callback_context: CallbackContext,
         llm_request: LlmRequest
     ) -> Optional[LlmResponse]:
@@ -170,7 +162,7 @@ class ModelArmorPlugin(BasePlugin):
         if not _text:
             return None
         logger.info(
-            f"[ModelArmorPlugin] Sanitizing user prompt: '{_text[:80]}...'"
+            f"[ModelArmorGuard] Sanitizing user prompt: '{_text[:80]}...'"
         )
 
         try:
@@ -178,35 +170,62 @@ class ModelArmorPlugin(BasePlugin):
                 name=self.template_name,
                 user_prompt_data=modelarmor_v1.DataItem(text=_text)
             )
-            # 此處會透過 @property 觸發延遲載入，此時在雲端環境運作，可正常認證
             _result = self.client.sanitize_user_prompt(request=req)
             if self._blocked(result=_result):
                 return self._block_response("很抱歉，基於安全考量，我無法處理此請求。請修改您的問題後再試一次。")
         except Exception as e:
-            logger.error(f"[ModelArmorPlugin] user prompt screen error: {e}")
+            logger.error(f"[ModelArmorGuard] user prompt screen error: {e}")
         return None
 
-    async def after_model_callback(
+    def after_model_callback(
         self,
-        *,
         callback_context: CallbackContext,
         llm_response: LlmResponse
     ) -> Optional[LlmResponse]:
         _text = _extract_model_response(llm_response=llm_response)
         if not _text:
             return None
-        logger.info(
-            f"[ModelArmorPlugin] Sanitizing model response: '{_text[:80]}..."
+        logger.into(
+            f"[ModelArmorGuard] Sanitizing model response: '{_text[:80]}..."
         )
         try:
             req = modelarmor_v1.SanitizeModelResponseRequest(
                 name=self.template_name,
                 model_response_data=modelarmor_v1.DataItem(text=_text)
             )
-            # 同樣會在這裡安全地動態取得 Client
             _result = self.client.sanitize_model_response(request=req)
             if self._blocked(result=_result):
                 return self._block_response("很抱歉，我的回覆因安全考量被過濾，請換個方式詢問。")
         except Exception as e:
-            logger.error(f"[ModelArmorPlugin] response screen error: {e}")
+            logger.error(f"[ModelArmorGuard] response screen error: {e}")
         return None
+
+
+_guard_instance: Optional[ModelArmorGuard] = None
+
+
+def create_guard():
+    if _guard_instance is not None:
+        return _guard_instance
+
+    project_id = os.getenv('GOOGLE_CLOUD_PROJECT', None)
+    location = os.getenv('GOOGLE_CLOUD_LOCATION', None)
+    template_id = os.getenv('MODEL_ARMOR_TEMPLATE_ID', None)
+
+    if not project_id or not location or not template_id:
+        logger.error(".env file is not set")
+        return NoGuard
+
+    if config.MODEL_ARMOR.enabled:
+        try:
+            _guard_instance = ModelArmorGuard(
+                project_id=project_id,
+                template_id=template_id,
+                location=location
+            )
+            return _guard_instance
+        except Exception as e:
+            logger.error(
+                f'[ModelArmorGuard] ❌ init failed: {e}. Using no-op guard.'
+            )
+    return NoGuard

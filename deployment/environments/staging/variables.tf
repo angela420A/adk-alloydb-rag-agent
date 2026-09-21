@@ -69,7 +69,7 @@ variable "alloydb_password" {
 # (Optional)
 variable "alloydb_database" {
   type        = string
-  default     = "gamaplay_agent_kb_stag"
+  default     = "agentic_agent_kb_stag"
   description = "Database the Toolbox connects to. Terraform does not create it; run CREATE DATABASE manually first"
 }
 

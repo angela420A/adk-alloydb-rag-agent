@@ -7,13 +7,13 @@ from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
 from google.cloud import logging as google_cloud_logging
 from vertexai.agent_engines.templates.adk import AdkApp
 
-from gamaplay_agent.utils.env import load_env
+from agent.utils.env import load_env
 
 load_env()
 
-from gamaplay_agent.agent import app as adk_app
-from gamaplay_agent.utils.telemetry import setup_telemetry
-from gamaplay_agent.utils.typing import Feedback
+from agent.agent import app as adk_app
+from agent.utils.telemetry import setup_telemetry
+from agent.utils.typing import Feedback
 
 
 class AgentEngineApp(AdkApp):

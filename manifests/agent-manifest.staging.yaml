@@ -1,12 +1,12 @@
-name: "gamaplay-agent-staging"
-agent_directory: "gamaplay_agent"
+name: "agentic-agent-staging"
+agent_directory: "agent"
 region: "asia-southeast1"
 is_a2a: false
 python_version: "3.13"
 entrypoint:
-  module: "gamaplay_agent.agent_runtime_app"
+  module: "agent.agent_runtime_app"
   object: "agent_runtime"
-  requirements_file: "gamaplay_agent/utils/.requirements.txt"
+  requirements_file: "agent/utils/.requirements.txt"
 runtime_resources:
   cpu: "4"
   memory: "8Gi"

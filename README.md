@@ -1,4 +1,4 @@
-# GamaPlay Agent
+# Agentic Agent
 
 An AI Customer Support Agent platform built with Google Agent Development Kit (ADK), Google Cloud Vertex AI Agent Runtime, AlloyDB (pgvector + hybrid search), Model Context Protocol (MCP) Toolbox, and Model Armor security guardrails.
 
@@ -6,41 +6,12 @@ An AI Customer Support Agent platform built with Google Agent Development Kit (A
 
 ## 🏛️ Architecture Overview
 
-```
-                      ┌─────────────────────────────────┐
-                      │          User / Client          │
-                      └────────────────┬────────────────┘
-                                       │
-                                       ▼
-                      ┌─────────────────────────────────┐
-                      │   Vertex AI Agent Engine        │
-                      │   (AdkApp / Agent Runtime)      │
-                      │   • Python 3.13                 │
-                      │   • OpenTelemetry Telemetry     │
-                      │   • Model Armor Plugin          │
-                      └───────┬─────────────────┬───────┘
-                              │                 │
-            (Private PSC / DNS)                 │ (Vertex AI API)
-                              ▼                 ▼
-          ┌───────────────────────┐   ┌───────────────────────┐
-          │ Cloud Run MCP Toolbox │   │  Gemini 2.5 Flash     │
-          │ • AlloyDB Connector   │   │  (LLM Reasoning)      │
-          │ • Tools Definition    │   └───────────────────────┘
-          └───────────┬───────────┘
-                      │ (Private PSA)
-                      ▼
-          ┌───────────────────────┐
-          │  AlloyDB for Postgre  │
-          │  • pgvector / ScaNN   │
-          │  • GIN Hybrid Search  │
-          │  • google_ml_integ    │
-          └───────────────────────┘
-```
+![Agentic Agent System Design](images/Agentic-Agent-System-Design.drawio.png)
 
-- **Agent Framework** ([`gamaplay_agent/`](gamaplay_agent)): Built on Google ADK (`google-adk`), wrapped in `AdkApp` for Vertex AI Reasoning Engine deployment.
+- **Agent Framework** ([`agent/`](agent)): Built on Google ADK (`google-adk`), wrapped in `AdkApp` for Vertex AI Reasoning Engine deployment.
 - **Knowledge Retrieval**: Knowledge base articles stored in AlloyDB with multi-lingual embeddings (`text-multilingual-embedding-002`) and ScaNN vector indexing.
 - **Tool Protocol**: Database queries orchestrated via Model Context Protocol (MCP) Toolbox hosted on Cloud Run.
-- **Security & Guardrails**: Integrated [`ModelArmorPlugin`](gamaplay_agent/plugins/model_armor.py) for prompt sanitization, jailbreak prevention, and response verification.
+- **Security & Guardrails**: Integrated [`ModelArmorPlugin`](agent/plugins/model_armor.py) for prompt sanitization, jailbreak prevention, and response verification.
 - **Infrastructure as Code** ([`deployment/`](deployment)): Fully automated Terraform modules for multi-environment (`dev`, `staging`, `prod`) provisioning.
 
 ---
@@ -157,7 +128,7 @@ Deploy the agent to Google Cloud Vertex AI Agent Runtime:
   make agent-deploy
   ```
 
-*(Under the hood, `make agent-deploy` generates `gamaplay_agent/utils/.requirements.txt` using `uv export` and executes `gamaplay_agent.utils.deploy` with idempotent create/update logic).*
+*(Under the hood, `make agent-deploy` generates `agent/utils/.requirements.txt` using `uv export` and executes `agent.utils.deploy` with idempotent create/update logic).*
 
 ---
 
@@ -168,12 +139,13 @@ Deploy the agent to Google Cloud Vertex AI Agent Runtime:
 ├── .env.example                 # Environment variables template
 ├── Makefile                     # Developer workflow and deployment commands
 ├── README.md                    # Root project documentation (this file)
+├── images/                      # Architecture diagrams
 ├── pyproject.toml               # Python project configuration and dependencies
 ├── uv.lock                      # Locked dependency graph
 ├── manifests/                   # Static Vertex AI Agent Runtime manifests
 │   ├── README.md                # Manifest schema & deployment guide
 │   └── agent-manifest.example.yaml
-├── gamaplay_agent/              # Core Agent Application source code
+├── agent/                       # Core Agent Application source code
 │   ├── agent.py                 # ADK Agent definition & Toolset registration
 │   ├── agent_runtime_app.py     # Vertex AI AdkApp runtime wrapper & telemetry
 │   ├── prompt.py                # System instructions & knowledge base prompts

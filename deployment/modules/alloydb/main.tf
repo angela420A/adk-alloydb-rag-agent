@@ -1,7 +1,7 @@
 resource "google_alloydb_cluster" "agent_cluster" {
   project    = var.project_id
   location   = var.region
-  cluster_id = "gamaplay-agent-${var.env}-alloydb"
+  cluster_id = "agentic-agent-${var.env}-alloydb"
 
   database_version = var.database_version
 
@@ -28,7 +28,7 @@ resource "google_alloydb_cluster" "agent_cluster" {
 
 resource "google_alloydb_instance" "primary" {
   cluster       = google_alloydb_cluster.agent_cluster.name
-  instance_id   = "gamaplay-agent-${var.env}-pr"
+  instance_id   = "agentic-agent-${var.env}-pr"
   instance_type = "PRIMARY"
 
   availability_type = var.availability_type

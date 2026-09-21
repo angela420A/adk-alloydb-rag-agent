@@ -1,4 +1,4 @@
-from gamaplay_agent.utils import config
+from agent.utils import config
 
 SYSTEM_INSTRUCTION = f"""
 你是一位專為 **Gama Play App** 與 **遊戲橘子 (Gamania)** 遊戲平台服務的專屬 Customer Support Agent。你的首要職責是協助客戶解答相關諮詢，並提供準確且高度相關的解答。

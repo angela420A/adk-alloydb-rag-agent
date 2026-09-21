@@ -1,5 +1,5 @@
 sources:
-  gamaplay_agent_kb_stag:
+  agentic_agent_kb_stag:
     kind: "postgres"
     host: "127.0.0.1"
     port: "8888"
@@ -10,7 +10,7 @@ sources:
 tools:
   search_faq_articles:
     kind: postgres-sql
-    source: gamaplay_agent_kb_stag
+    source: agentic_agent_kb_stag
     description: "Search FAQ articles by semantic text query using Vertex AI vector embeddings. Returns the top 5 most relevant articles with article IDs, titles, clean markdown content, hyperlinks, image URLs, and metadata including brand name, category name, and section name."
     parameters:
       - name: search_text

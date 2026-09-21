@@ -1,6 +1,6 @@
 resource "google_compute_instance" "bastion" {
   project      = var.project_id
-  name         = "gamaplay-agent-data-${var.env}-vm"
+  name         = "agentic-agent-data-${var.env}-vm"
   machine_type = var.machine_type
   zone         = var.zone
   description  = "Bastion host for psql access to AlloyDB over PSA peering"

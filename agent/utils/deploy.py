@@ -16,7 +16,7 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-from gamaplay_agent.utils.env import load_env
+from agent.utils.env import load_env
 
 try:
     load_env()
@@ -586,7 +586,7 @@ def deploy(
     description = description or f"{display_name} Agent Engine ({app_env})"
 
     # Agent directory & Entrypoint
-    manifest_dir = manifest_data.get("agent_directory", "app")
+    manifest_dir = manifest_data.get("agent_directory", "agent")
     if not source_packages:
         source_packages = (f"./{manifest_dir}",)
 

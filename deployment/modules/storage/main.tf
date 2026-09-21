@@ -1,5 +1,5 @@
 # locals {
-#   bucket_name = coalesce(var.bucket_name, "gamaplay-agent-${var.env}-artifacts")
+#   bucket_name = coalesce(var.bucket_name, "agentic-agent-${var.env}-artifacts")
 # }
 
 # resource "google_storage_bucket" "agent_artifacts" {

@@ -40,27 +40,27 @@ toolbox-dw:
 # Use Toolbox on local device
 toolbox:
 	set -a; . .env.${APP_ENV}; set +a; \
-	./toolbox --config "gamaplay_agent/mcps/toolbox_alloydb.yaml"
+	./toolbox --config "agent/mcps/toolbox_alloydb.yaml"
 
 toolbox-ui:
 	set -a; . .env.${APP_ENV}; set +a; \
-	./toolbox --config "gamaplay_agent/mcps/toolbox_alloydb.yaml" --ui
+	./toolbox --config "agent/mcps/toolbox_alloydb.yaml" --ui
 
 toolbox-port:
 	set -a; . .env.${APP_ENV}; set +a; \
-	./toolbox --config "gamaplay_agent/mcps/toolbox_alloydb.yaml" --port 7000
+	./toolbox --config "agent/mcps/toolbox_alloydb.yaml" --port 7000
 
 
 # -----------------------------------------------------------------------------
 # Deploy Agent App to Agent Runtime
 # -----------------------------------------------------------------------------
 agent-deploy-dry:
-	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > gamaplay_agent/utils/.requirements.txt 2>/dev/null && \
+	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > agent/utils/.requirements.txt 2>/dev/null && \
 	set -a; . ./.env.$${APP_ENV}; set +a; \
-	uv run --env-file .env.$${APP_ENV} -m gamaplay_agent.utils.deploy --dry-run
+	uv run --env-file .env.$${APP_ENV} -m agent.utils.deploy --dry-run
 
 agent-deploy:
-	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > gamaplay_agent/utils/.requirements.txt 2>/dev/null && \
+	uv export --no-hashes --no-header --no-dev --no-emit-project --no-annotate > agent/utils/.requirements.txt 2>/dev/null && \
 	set -a; . ./.env.$${APP_ENV}; set +a; \
-	uv run --env-file .env.$${APP_ENV} -m gamaplay_agent.utils.deploy
+	uv run --env-file .env.$${APP_ENV} -m agent.utils.deploy
 		

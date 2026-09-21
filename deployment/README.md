@@ -1,6 +1,6 @@
-# Gamaplay Agent — Infrastructure & Deployment
+# Agentic Agent — Infrastructure & Deployment
 
-Terraform configuration and database bootstrap procedures for the Gamaplay Agent platform on Google Cloud.
+Terraform configuration and database bootstrap procedures for the Agentic Agent platform on Google Cloud.
 
 | Environment | GCP Project | Region | State Bucket |
 | :--- | :--- | :--- | :--- |
@@ -126,9 +126,9 @@ Keep this terminal open:
 export PROJECT_ID=<YOUR_PROJECT_ID>
 export REGION=<YOUR_REGION>
 export ZONE=<YOUR_ZONE>
-export ADBCLUSTER=gamaplay-agent-<ENV>-alloydb
-export ADBINSTANCE=gamaplay-agent-<ENV>-pr
-export BASTION=gamaplay-agent-data-<ENV>-vm
+export ADBCLUSTER=agentic-agent-<ENV>-alloydb
+export ADBINSTANCE=agentic-agent-<ENV>-pr
+export BASTION=agentic-agent-data-<ENV>-vm
 
 export INSTANCE_IP=$(gcloud alloydb instances describe $ADBINSTANCE \
   --cluster=$ADBCLUSTER \
@@ -233,5 +233,5 @@ terraform output -raw ssh_tunnel_command
 - **Model Armor Regional Filters**: `Malicious URI filter` and `Multi-language detection` are currently supported in select regions (e.g. `us-central1`). For regions where these are not supported, set `enable_malicious_uri_filter=false` and `enable_multi_language_detection=false`.
 - **PSC Network Attachment**: `producer_accept_lists` on the network attachment is populated automatically by Vertex AI Agent Runtime during agent deployment. Terraform ignores lifecycle changes to this field.
 - **PSA IP Ranges**: Ensure non-overlapping CIDR blocks are assigned across environments (e.g., `10.73.8.0/24`, `10.73.16.0/24`, `10.73.24.0/24`).
-- **MCP Toolbox Configuration**: The source of truth for database tools is located in `gamaplay_agent/mcps/<env>/toolbox_alloydb.yaml`. Terraform synchronizes this configuration to Secret Manager.
+- **MCP Toolbox Configuration**: The source of truth for database tools is located in `agent/mcps/<env>/toolbox_alloydb.yaml`. Terraform synchronizes this configuration to Secret Manager.
 - **Provider Version Locking**: Always commit `.terraform.lock.hcl` for all environments to ensure reproducible deployments across CI/CD and local environments.

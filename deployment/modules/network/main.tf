@@ -1,7 +1,7 @@
 resource "google_compute_network" "this" {
   project                      = var.project_id
-  name                         = "gamaplay-agent-${var.env}-vpc"
-  description                  = "The VPC network for Gama Play ${var.env} Agent."
+  name                         = "agentic-agent-${var.env}-vpc"
+  description                  = "The VPC network for Agentic Agent ${var.env}."
   auto_create_subnetworks      = false
   enable_ula_internal_ipv6     = false
   routing_mode                 = "REGIONAL"
@@ -11,8 +11,8 @@ resource "google_compute_network" "this" {
 # subnet
 resource "google_compute_subnetwork" "this" {
   project                  = var.project_id
-  name                     = "gamaplay-agent-${var.env}-subnet"
-  description              = "The subnet for Gama Play ${var.env} Agent."
+  name                     = "agentic-agent-${var.env}-subnet"
+  description              = "The subnet for Agentic Agent ${var.env}."
   ip_cidr_range            = var.ip_cidr_range
   region                   = var.region
   stack_type               = "IPV4_ONLY"
@@ -23,7 +23,7 @@ resource "google_compute_subnetwork" "this" {
 # firewall
 resource "google_compute_firewall" "allow-ssh-iap" {
   project     = var.project_id
-  name        = "gamaplay-agent-${var.env}-allow-ssh-iap"
+  name        = "agentic-agent-${var.env}-allow-ssh-iap"
   description = "Allow SSH from Google Identity-Aware Proxy"
   network     = google_compute_network.this.name
 
@@ -61,14 +61,14 @@ resource "google_service_networking_connection" "psa_vpc_connection" {
 
 # cloud nat & router
 resource "google_compute_router" "router" {
-  name    = "gamaplay-agent-${var.env}-router"
+  name    = "agentic-agent-${var.env}-router"
   project = var.project_id
   region  = var.region
   network = google_compute_network.this.id
 }
 
 resource "google_compute_router_nat" "nat" {
-  name                               = "gamaplay-agent-${var.env}-nat"
+  name                               = "agentic-agent-${var.env}-nat"
   router                             = google_compute_router.router.name
   region                             = var.region
   project                            = var.project_id

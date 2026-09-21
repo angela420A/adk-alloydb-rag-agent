@@ -48,7 +48,7 @@ resource "google_network_connectivity_regional_endpoint" "psc_model_armor" {
 # network attachment
 resource "google_compute_network_attachment" "agent_runtime" {
   project               = var.project_id
-  name                  = "gamaplay-agent-${var.env}-attachment"
+  name                  = "agentic-agent-${var.env}-attachment"
   region                = var.region
   description           = "Agent Runtime PSC interface into the ${var.env} VPC"
   connection_preference = "ACCEPT_MANUAL"

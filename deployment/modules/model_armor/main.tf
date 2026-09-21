@@ -1,6 +1,6 @@
 resource "google_model_armor_template" "model-armor-template" {
   location    = var.region
-  template_id = "gamaplay-agent-${var.env}-template"
+  template_id = "agentic-agent-${var.env}-template"
   project     = var.project_id
 
   # filter_version_selector{

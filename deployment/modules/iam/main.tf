@@ -62,7 +62,7 @@ resource "google_service_account" "toolbox_identity" {
 
 resource "google_service_account" "agent_runtime" {
   project      = var.project_id
-  account_id   = "gamaplay-agent-${var.env}"
+  account_id   = "agentic-agent-${var.env}"
   display_name = "Agent identity for Toolbox Cloud Run invoker (${var.env})"
   description  = "Caller identity granted roles/run.invoker"
 }
@@ -70,7 +70,7 @@ resource "google_service_account" "agent_runtime" {
 # Compute Engine bastion (Alloydb postgres)
 resource "google_service_account" "bastion" {
   project      = var.project_id
-  account_id   = "gamaplay-bastion-${var.env}"
+  account_id   = "agentic-bastion-${var.env}"
   display_name = "Bastion VM identity (${var.env})"
   description  = "VM identity for connecting via IAP and accessing AlloyDB using psql"
 }
@@ -144,7 +144,7 @@ resource "google_secret_manager_secret_iam_member" "toolbox_identity" {
 
 # MCP Toolbox tools.yaml
 # Toolbox 啟動時讀 /app/tools.yaml 來知道要暴露哪些 MCP tools。
-# 這裡將 gamaplay_agent/mcps/<env>/toolbox_alloydb.yaml 的內容寫入 Secret Manager，
+# 這裡將 agent/mcps/<env>/toolbox_alloydb.yaml 的內容寫入 Secret Manager，
 # 再由 Cloud Run 以 volume 的方式掛載進容器。
 resource "google_secret_manager_secret" "tools_yaml" {
   project   = var.project_id

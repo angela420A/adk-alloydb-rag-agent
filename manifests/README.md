@@ -1,6 +1,6 @@
 # Vertex AI Agent Runtime Manifest Guide (`manifests/`)
 
-This directory contains static configuration manifests for deploying the **GamaPlay Agent** to Google Cloud Vertex AI Agent Runtime (Reasoning Engine).
+This directory contains static configuration manifests for deploying the **Agentic Agent** to Google Cloud Vertex AI Agent Runtime (Reasoning Engine).
 
 ---
 
@@ -27,7 +27,7 @@ Each environment manifest (`agent-manifest.<APP_ENV>.yaml`, e.g., `agent-manifes
 name: "my-cool-agent-dev"
 
 # Root directory of the agent source code
-agent_directory: "gamaplay_agent"
+agent_directory: "agent"
 
 # Target GCP region
 region: "us-central1"
@@ -40,9 +40,9 @@ python_version: "3.13"
 
 # Entrypoint module and instantiated object
 entrypoint:
-  module: "gamaplay_agent.agent_runtime_app"
+  module: "agent.agent_runtime_app"
   object: "agent_runtime"
-  requirements_file: "gamaplay_agent/utils/.requirements.txt"
+  requirements_file: "agent/utils/.requirements.txt"
 
 # Container resource limits & autoscaling
 runtime_resources:
@@ -58,13 +58,13 @@ runtime_resources:
 | Field | Type | Description | Example |
 | :--- | :--- | :--- | :--- |
 | `name` | `string` | Display name for the Vertex AI Reasoning Engine instance. | `"my-cool-agent-dev"` |
-| `agent_directory` | `string` | Root folder containing the agent package to bundle and upload. | `"gamaplay_agent"` |
+| `agent_directory` | `string` | Root folder containing the agent package to bundle and upload. | `"agent"` |
 | `region` | `string` | GCP region for Vertex AI Agent Engine. | `"us-central1"` |
 | `is_a2a` | `boolean` | Flag indicating whether the agent implements the A2A protocol. | `false` |
 | `python_version` | `string` | Python version for the runtime container (`3.10`–`3.14`). | `"3.13"` |
-| `entrypoint.module` | `string` | Python module containing the instantiated `AdkApp`. | `"gamaplay_agent.agent_runtime_app"` |
+| `entrypoint.module` | `string` | Python module containing the instantiated `AdkApp`. | `"agent.agent_runtime_app"` |
 | `entrypoint.object` | `string` | Variable name of the `AdkApp` instance in the entrypoint module. | `"agent_runtime"` |
-| `entrypoint.requirements_file` | `string` | Path to generated deployment dependencies. | `"gamaplay_agent/utils/.requirements.txt"` |
+| `entrypoint.requirements_file` | `string` | Path to generated deployment dependencies. | `"agent/utils/.requirements.txt"` |
 | `runtime_resources.cpu` | `string` | Number of vCPUs allocated per container instance. | `"4"` |
 | `runtime_resources.memory` | `string` | Memory limit per container instance. | `"8Gi"` |
 | `runtime_resources.container_concurrency` | `integer` | Maximum concurrent requests per container. | `9` |
@@ -75,7 +75,7 @@ runtime_resources:
 
 ## 🚀 Deployment Workflow
 
-The Python deployment utility ([`gamaplay_agent/utils/deploy.py`](../gamaplay_agent/utils/deploy.py)) automatically reads the corresponding manifest based on `APP_ENV`:
+The Python deployment utility ([`agent/utils/deploy.py`](../agent/utils/deploy.py)) automatically reads the corresponding manifest based on `APP_ENV`:
 
 ```
                     ┌─────────────────────────┐

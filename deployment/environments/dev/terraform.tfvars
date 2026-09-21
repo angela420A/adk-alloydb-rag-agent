@@ -1,5 +1,6 @@
-project_name = "gamaplay-agent-dev"
-project_id   = "qaaisys"
+project_name = "agentic-agent-dev"
+# Replace {GOOGLE_CLOUD_PROJECT} with your GCP Project ID.
+project_id   = "{GOOGLE_CLOUD_PROJECT}"
 region       = "us-central1"
 zone         = "us-central1-a"
 
@@ -19,4 +20,4 @@ psc_googleapis_ip = "10.0.0.100"
 
 # secret manager----
 # MCP Toolbox tools.yaml for this environment
-tools_yaml_path = "../../../gamaplay_agent/mcps/dev/toolbox_alloydb.yaml"
+tools_yaml_path = "../../../agent/mcps/dev/toolbox_alloydb.yaml"

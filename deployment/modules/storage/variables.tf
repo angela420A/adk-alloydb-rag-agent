@@ -29,7 +29,7 @@ variable "vertex_ai_sa_email" {
 variable "bucket_name" {
   type        = string
   default     = null
-  description = "Optional explicit bucket name. Defaults to gamaplay-agent-<env>-artifacts"
+  description = "Optional explicit bucket name. Defaults to agentic-agent-<env>-artifacts"
 }
 
 variable "force_destroy" {

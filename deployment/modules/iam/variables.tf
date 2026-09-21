@@ -67,6 +67,6 @@ variable "alloydb_password" {
 
 variable "tools_yaml_path" {
   type        = string
-  description = "File path to MCP Toolbox tools.yaml, e.g., ../../../gamaplay_agent/mcps/dev/toolbox_alloydb.yaml"
+  description = "File path to MCP Toolbox tools.yaml, e.g., ../../../agent/mcps/dev/toolbox_alloydb.yaml"
 }
 

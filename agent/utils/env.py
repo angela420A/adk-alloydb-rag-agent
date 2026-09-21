@@ -1,4 +1,4 @@
-"""Environment configuration and validation utility for GamaPlay Agent."""
+"""Environment configuration and validation utility for Agent."""
 
 import logging
 import os
