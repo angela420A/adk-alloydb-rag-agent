@@ -2,34 +2,42 @@
 
 Terraform configuration and database bootstrap procedures for the Agentic Agent platform on Google Cloud.
 
+Replace the placeholders below with your own project values before applying any environment.
+
 | Environment | GCP Project | Region | State Bucket |
 | :--- | :--- | :--- | :--- |
 | **dev** | `<DEV_PROJECT_ID>` | `<DEV_REGION>` | `<DEV_TF_STATE_BUCKET>` |
 | **staging** | `<STAGING_PROJECT_ID>` | `<STAGING_REGION>` | `<STAGING_TF_STATE_BUCKET>` |
 | **prod** | `<PROD_PROJECT_ID>` | `<PROD_REGION>` | `<PROD_TF_STATE_BUCKET>` |
 
+> This repo currently ships Terraform roots under `environments/dev` and `environments/staging`. You can add `prod` (or additional environments) by copying an existing environment directory and updating project, backend, and variable values.
+
 ---
 
-## 📁 Directory Layout
+## Directory Layout
 
 ```text
 deployment/
 ├── environments/        # Root modules per environment
 │   ├── dev/             # Development environment configuration
 │   ├── staging/         # Staging environment configuration
-│   └── prod/            # Production environment configuration
-└── modules/             # Shared Terraform modules
-    ├── agent_runtime/   # Vertex AI Agent Runtime IAM & configurations
-    ├── alloydb/         # AlloyDB cluster + primary instance + AI flags
-    ├── bigquery/        # Telemetry dataset & views for agent logging
-    ├── cloud_run/       # MCP Toolbox Cloud Run service
-    ├── compute/         # Bastion VM (IAP SSH tunnel -> AlloyDB)
-    ├── dns/             # Private DNS zones for PSC & Cloud Run peering
-    ├── iam/             # Service accounts & Secret Manager secrets
-    ├── model_armor/     # Model Armor template & security guardrails
-    ├── network/         # VPC, subnets, PSA, and Cloud NAT
-    ├── psc/             # Private Service Connect (PSC) endpoints & attachments
-    └── storage/         # GCS buckets for telemetry and runtime artifacts
+│   └── prod/            # Optional: add when you are ready for production
+├── modules/             # Shared Terraform modules
+│   ├── agent_runtime/   # Vertex AI Agent Runtime IAM & configurations
+│   ├── alloydb/         # AlloyDB cluster + primary instance + AI flags
+│   ├── bigquery/        # Telemetry dataset & views for agent logging
+│   ├── cloud_run/       # MCP Toolbox Cloud Run service
+│   ├── compute/         # Bastion VM (IAP SSH tunnel -> AlloyDB)
+│   ├── dns/             # Private DNS zones for PSC & Cloud Run peering
+│   ├── iam/             # Service accounts & Secret Manager secrets
+│   ├── model_armor/     # Model Armor template & security guardrails
+│   ├── network/         # VPC, subnets, PSA, and Cloud NAT
+│   ├── psc/             # Private Service Connect (PSC) endpoints & attachments
+│   └── storage/         # GCS buckets for telemetry and runtime artifacts
+└── shared/              # Shared SQL, schemas, and supporting artifacts
+    ├── completions.sql
+    ├── dummy_source.b64
+    └── genai_logs_schema.json
 ```
 
 ---
@@ -38,7 +46,7 @@ deployment/
 
 Complete these steps **before** running `terraform init`:
 
-1. **Create the Terraform State Bucket**:
+1. **Create the Terraform state bucket**  
    The bucket name must match `backend.tf` in the target environment:
 
    ```bash
@@ -56,7 +64,7 @@ Complete these steps **before** running `terraform init`:
    gcloud auth login --update-adc
    ```
 
-3. **Export the AlloyDB Password**:
+3. **Export the AlloyDB password**  
    Pass the database password via environment variable (never commit passwords to `terraform.tfvars`):
 
    ```bash
@@ -67,7 +75,10 @@ Complete these steps **before** running `terraform init`:
 
 ## 1. First-Time Environment Provisioning
 
-A new environment requires a **three-phase bootstrap** because the MCP Toolbox on Cloud Run requires the target database to exist before it can start, while the database itself can only be created after AlloyDB is running.
+A new environment requires a **three-phase bootstrap** because:
+
+- the MCP Toolbox on Cloud Run expects the target database to already exist before it can start cleanly, and
+- the database can only be created after AlloyDB itself is running.
 
 Navigate to the target environment directory:
 
@@ -77,7 +88,8 @@ terraform init
 ```
 
 ### Phase 1 — Core Infrastructure
-Provision the VPC, IAM, AlloyDB, Bastion VM, and Storage. Cloud Run is intentionally excluded at this phase.
+
+Provision the VPC, IAM, AlloyDB, bastion VM, and storage. Cloud Run is intentionally excluded in this phase.
 
 ```bash
 terraform plan \
@@ -100,10 +112,12 @@ rm phase1.tfplan
 > AlloyDB cluster creation typically takes 15–20 minutes. `-target` is used only once during initial bootstrapping to resolve resource dependency ordering.
 
 ### Phase 2 — Database Bootstrap
+
 Proceed to [Section 2: Database Bootstrap](#2-database-bootstrap) to create the database, vector extensions, and full-text indexes.
 
 ### Phase 3 — Remaining Infrastructure
-Once the database is initialized, apply the entire configuration to provision Cloud Run, DNS, PSC, Agent Runtime, and BigQuery:
+
+Once the database is initialized, apply the full configuration to provision Cloud Run, DNS, PSC, Agent Runtime, and BigQuery:
 
 ```bash
 terraform plan -out=<ENV>.tfplan
@@ -115,9 +129,10 @@ rm <ENV>.tfplan
 
 ## 2. Database Bootstrap
 
-Required **once per environment**. The database and its vector extensions are managed inside AlloyDB via PostgreSQL SQL scripts.
+Required **once per environment**. The database and its vector extensions are managed inside AlloyDB via PostgreSQL SQL.
 
 ### 2.1 Open an IAP Tunnel to AlloyDB
+
 AlloyDB uses Private IP only; all administrative access routes through the bastion VM via Identity-Aware Proxy (IAP).
 
 Keep this terminal open:
@@ -143,9 +158,10 @@ gcloud compute ssh $BASTION \
   -- -N -L 8888:${INSTANCE_IP}:5432
 ```
 
-*(Alternatively, run `terraform output -raw ssh_tunnel_command` for a pre-filled command).*
+Alternatively, run `terraform output -raw ssh_tunnel_command` for a pre-filled command.
 
 ### 2.2 Create the Database
+
 In a second terminal:
 
 ```bash
@@ -157,6 +173,7 @@ psql "host=127.0.0.1 port=8888 user=postgres dbname=postgres sslmode=require" \
 ```
 
 ### 2.3 Enable Vector & AI Extensions
+
 Run the following SQL commands in order:
 
 ```bash
@@ -177,7 +194,8 @@ psql "host=127.0.0.1 port=8888 user=postgres dbname=${DB_NAME} sslmode=require" 
 | `alloydb_scann` | ScaNN vector index for fast approximate nearest neighbor retrieval. |
 
 ### 2.4 Create Full-Text Search Index (GIN)
-For hybrid search (Vector + Full-Text Search), create a `tsvector` column and a GIN index on your knowledge base table:
+
+For hybrid search (vector + full-text search), create a `tsvector` column and a GIN index on your knowledge base table:
 
 ```sql
 ALTER TABLE rag_documents
@@ -189,7 +207,8 @@ ON rag_documents USING GIN (content_tsv);
 ```
 
 ### 2.5 Verification
-Verify that database flags and Vertex AI integration function properly:
+
+Verify that database flags and Vertex AI integration work as expected:
 
 ```sql
 SELECT extversion FROM pg_extension WHERE extname = 'google_ml_integration';
@@ -203,6 +222,7 @@ SELECT embedding('text-multilingual-embedding-002', 'hello world');
 ```
 
 ### 2.6 Create Sample Hotels Table
+
 Create the demo `hotels` table and load sample rows used by the MCP Toolbox hotel tools:
 
 ```bash
@@ -243,7 +263,7 @@ psql "host=127.0.0.1 port=8888 user=postgres dbname=${DB_NAME} sslmode=require" 
 
 ## 3. Day-to-Day Operations
 
-After initial bootstrap, standard Terraform workflows apply directly:
+After the initial bootstrap, use the standard Terraform workflow:
 
 ```bash
 cd deployment/environments/<ENV>
@@ -267,8 +287,8 @@ terraform output -raw ssh_tunnel_command
 
 ## 4. Important Notes & Architectural Constraints
 
-- **Model Armor Regional Filters**: `Malicious URI filter` and `Multi-language detection` are currently supported in select regions (e.g. `us-central1`). For regions where these are not supported, set `enable_malicious_uri_filter=false` and `enable_multi_language_detection=false`.
-- **PSC Network Attachment**: `producer_accept_lists` on the network attachment is populated automatically by Vertex AI Agent Runtime during agent deployment. Terraform ignores lifecycle changes to this field.
-- **PSA IP Ranges**: Ensure non-overlapping CIDR blocks are assigned across environments (e.g., `10.73.8.0/24`, `10.73.16.0/24`, `10.73.24.0/24`).
-- **MCP Toolbox Configuration**: The source of truth for database tools is located in `agent/mcps/<env>/toolbox_alloydb.yaml`. Terraform synchronizes this configuration to Secret Manager.
-- **Provider Version Locking**: Always commit `.terraform.lock.hcl` for all environments to ensure reproducible deployments across CI/CD and local environments.
+- **Model Armor regional filters**: The `Malicious URI filter` and `Multi-language detection` features are currently supported in select regions (for example `us-central1`). For regions where they are unavailable, set `enable_malicious_uri_filter=false` and `enable_multi_language_detection=false`.
+- **PSC network attachment**: `producer_accept_lists` on the network attachment is populated automatically by Vertex AI Agent Runtime during agent deployment. Terraform ignores lifecycle changes to this field.
+- **PSA IP ranges**: Assign non-overlapping CIDR blocks across environments (for example `10.73.8.0/24`, `10.73.16.0/24`, `10.73.24.0/24`).
+- **MCP Toolbox configuration**: Per-environment database tool configs live under `agent/mcps/<env>/toolbox_alloydb.yaml` (for example `agent/mcps/dev/toolbox_alloydb.yaml`). Terraform synchronizes this configuration to Secret Manager. A root-level `agent/mcps/toolbox_alloydb.yaml` is also used by local Makefile Toolbox targets.
+- **Provider version locking**: Always commit `.terraform.lock.hcl` for all environments so local and CI/CD runs stay reproducible.

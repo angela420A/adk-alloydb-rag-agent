@@ -1,10 +1,12 @@
 # Vertex AI Agent Runtime Manifest Guide (`manifests/`)
 
-This directory contains static configuration manifests for deploying the **Agentic Agent** to Google Cloud Vertex AI Agent Runtime (Reasoning Engine).
+This directory holds static configuration manifests for deploying the **Agentic Agent** to Google Cloud Vertex AI Agent Runtime (Reasoning Engine).
+
+Manifests define **static** deployment specs (name, entrypoint, resources). Runtime secrets and environment-specific values still come from `.env.${APP_ENV}`.
 
 ---
 
-## 📁 Manifest Directory Structure
+## Manifest Directory Structure
 
 ```text
 manifests/
@@ -12,11 +14,19 @@ manifests/
 └── README.md                     # This documentation guide
 ```
 
+Create one file per environment:
+
+```text
+manifests/agent-manifest.<APP_ENV>.yaml
+```
+
+Examples: `agent-manifest.dev.yaml`, `agent-manifest.staging.yaml`, `agent-manifest.prod.yaml`.
+
 ---
 
-## ⚙️ Manifest Schema & Field Reference
+## Manifest Schema & Field Reference
 
-Each environment manifest (`agent-manifest.<APP_ENV>.yaml`, e.g., `agent-manifest.dev.yaml`) defines the static metadata, entrypoint, and compute specifications for the Agent Runtime container:
+Each environment manifest defines the static metadata, entrypoint, and compute specifications for the Agent Runtime container:
 
 ```yaml
 # ==============================================================================
@@ -53,6 +63,8 @@ runtime_resources:
   max_instances: 10
 ```
 
+> The committed template [`agent-manifest.example.yaml`](agent-manifest.example.yaml) uses `{YOUR_...}` placeholders. Replace those with your project values, or start from the concrete example above.
+
 ### Field Descriptions
 
 | Field | Type | Description | Example |
@@ -60,24 +72,24 @@ runtime_resources:
 | `name` | `string` | Display name for the Vertex AI Reasoning Engine instance. | `"my-cool-agent-dev"` |
 | `agent_directory` | `string` | Root folder containing the agent package to bundle and upload. | `"agent"` |
 | `region` | `string` | GCP region for Vertex AI Agent Engine. | `"us-central1"` |
-| `is_a2a` | `boolean` | Flag indicating whether the agent implements the A2A protocol. | `false` |
+| `is_a2a` | `boolean` | Whether the agent implements the A2A protocol. | `false` |
 | `python_version` | `string` | Python version for the runtime container (`3.10`–`3.14`). | `"3.13"` |
-| `entrypoint.module` | `string` | Python module containing the instantiated `AdkApp`. | `"agent.agent_runtime_app"` |
+| `entrypoint.module` | `string` | Python module that contains the instantiated `AdkApp`. | `"agent.agent_runtime_app"` |
 | `entrypoint.object` | `string` | Variable name of the `AdkApp` instance in the entrypoint module. | `"agent_runtime"` |
 | `entrypoint.requirements_file` | `string` | Path to generated deployment dependencies. | `"agent/utils/.requirements.txt"` |
 | `runtime_resources.cpu` | `string` | Number of vCPUs allocated per container instance. | `"4"` |
 | `runtime_resources.memory` | `string` | Memory limit per container instance. | `"8Gi"` |
 | `runtime_resources.container_concurrency` | `integer` | Maximum concurrent requests per container. | `9` |
-| `runtime_resources.min_instances` | `integer` | Minimum instance count (set >= 1 to eliminate cold starts). | `1` |
+| `runtime_resources.min_instances` | `integer` | Minimum instance count (set `>= 1` to reduce cold starts). | `1` |
 | `runtime_resources.max_instances` | `integer` | Maximum autoscaling instance limit. | `10` |
 
 ---
 
-## 🚀 Deployment Workflow
+## Deployment Workflow
 
-The Python deployment utility ([`agent/utils/deploy.py`](../agent/utils/deploy.py)) automatically reads the corresponding manifest based on `APP_ENV`:
+The Python deployment utility ([`agent/utils/deploy.py`](../agent/utils/deploy.py)) automatically reads the manifest that matches `APP_ENV`:
 
-```
+```text
                     ┌─────────────────────────┐
                     │      export APP_ENV     │
                     └────────────┬────────────┘
@@ -106,16 +118,18 @@ The Python deployment utility ([`agent/utils/deploy.py`](../agent/utils/deploy.p
 ```
 
 ### 1. Creating a New Environment Manifest
-To configure a new environment (e.g. `dev`, `staging`, or `prod`):
+
+To configure a new environment (for example `dev`, `staging`, or `prod`):
 
 ```bash
 cp manifests/agent-manifest.example.yaml manifests/agent-manifest.dev.yaml
 ```
 
-Edit `manifests/agent-manifest.dev.yaml` to specify your project-specific `name`, `region`, and resource limits.
+Edit `manifests/agent-manifest.dev.yaml` and set your project-specific `name`, `region`, entrypoint, and resource limits.
 
 ### 2. Validating the Manifest (Dry-Run)
-Test schema generation, class method introspection, and configuration without deploying:
+
+Test schema generation, class method introspection, and configuration **without** deploying:
 
 ```bash
 export APP_ENV=dev
@@ -123,6 +137,7 @@ make agent-deploy-dry
 ```
 
 ### 3. Deploying to Vertex AI
+
 Deploy or update the Agent Engine on Google Cloud:
 
 ```bash
@@ -130,4 +145,4 @@ export APP_ENV=dev
 make agent-deploy
 ```
 
-Upon successful deployment, deployment metadata is recorded in `metadata/deployment_metadata.${APP_ENV}.json`.
+On success, deployment metadata is written to `metadata/deployment_metadata.${APP_ENV}.json`.
