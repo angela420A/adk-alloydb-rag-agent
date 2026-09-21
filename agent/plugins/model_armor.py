@@ -124,7 +124,7 @@ class ModelArmorPlugin(BasePlugin):
             )
 
         self.template_name = f"projects/{self.project_id}/locations/{self.location}/templates/{self.template_id}"
-        self._client = None  # 在初始化時不建立連線，僅設為 None
+        self._client = None  # Do not connect at init time; create lazily
 
         logger.info(
             f"[ModelArmorPlugin] Initialized with template: {self.template_id}"
@@ -132,10 +132,7 @@ class ModelArmorPlugin(BasePlugin):
 
     @property
     def client(self) -> modelarmor_v1.ModelArmorClient:
-        """
-        延遲載入（Lazy Initialization）
-        只有在 Runtime 實際被調用時，才會在當前環境中建立 ModelArmorClient
-        """
+        """Lazy-load ModelArmorClient only when first used at runtime."""
         if self._client is None:
             self._client = modelarmor_v1.ModelArmorClient(
                 transport="rest",
@@ -178,10 +175,13 @@ class ModelArmorPlugin(BasePlugin):
                 name=self.template_name,
                 user_prompt_data=modelarmor_v1.DataItem(text=_text)
             )
-            # 此處會透過 @property 觸發延遲載入，此時在雲端環境運作，可正常認證
+            # Accessing .client triggers lazy init; auth works in the cloud runtime
             _result = self.client.sanitize_user_prompt(request=req)
             if self._blocked(result=_result):
-                return self._block_response("很抱歉，基於安全考量，我無法處理此請求。請修改您的問題後再試一次。")
+                return self._block_response(
+                    "Sorry, I cannot process this request for safety reasons. "
+                    "Please revise your question and try again."
+                )
         except Exception as e:
             logger.error(f"[ModelArmorPlugin] user prompt screen error: {e}")
         return None
@@ -203,10 +203,13 @@ class ModelArmorPlugin(BasePlugin):
                 name=self.template_name,
                 model_response_data=modelarmor_v1.DataItem(text=_text)
             )
-            # 同樣會在這裡安全地動態取得 Client
+            # Same lazy client access as before_model_callback
             _result = self.client.sanitize_model_response(request=req)
             if self._blocked(result=_result):
-                return self._block_response("很抱歉，我的回覆因安全考量被過濾，請換個方式詢問。")
+                return self._block_response(
+                    "Sorry, my response was filtered for safety reasons. "
+                    "Please try asking in a different way."
+                )
         except Exception as e:
             logger.error(f"[ModelArmorPlugin] response screen error: {e}")
         return None

@@ -39,8 +39,8 @@ resource "google_cloud_run_v2_service" "toolbox" {
       egress = "PRIVATE_RANGES_ONLY"
     }
 
-    # 將 tools.yaml 以 secret volume 掛載進容器，
-    # 等同於 gcloud 的 --set-secrets "/app/tools.yaml=<secret>:latest"
+    # Mount tools.yaml into the container as a secret volume,
+    # equivalent to gcloud --set-secrets "/app/tools.yaml=<secret>:latest"
     volumes {
       name = "tools"
       secret {
@@ -56,7 +56,7 @@ resource "google_cloud_run_v2_service" "toolbox" {
     containers {
       image = var.image
 
-      # Toolbox 預設不會去 /app 找設定檔，必須明確指定 --tools-file
+      # Toolbox does not look under /app by default; --tools-file must be set explicitly
       args = [
         "--tools-file=${var.tools_mount_path}/tools.yaml",
         "--address=0.0.0.0",
@@ -103,7 +103,7 @@ resource "google_cloud_run_v2_service" "toolbox" {
         value = var.alloydb_host
       }
 
-      # 以下對應 tools.yaml 裡的 ${...} 佔位符，Toolbox 啟動時會替換
+      # These map to ${...} placeholders in tools.yaml; Toolbox substitutes them at startup
       env {
         name  = "ALLOYDB_CLUSTER"
         value = var.alloydb_cluster

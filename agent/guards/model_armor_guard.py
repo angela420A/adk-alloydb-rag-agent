@@ -172,7 +172,10 @@ class ModelArmorGuard:
             )
             _result = self.client.sanitize_user_prompt(request=req)
             if self._blocked(result=_result):
-                return self._block_response("很抱歉，基於安全考量，我無法處理此請求。請修改您的問題後再試一次。")
+                return self._block_response(
+                    "Sorry, I cannot process this request for safety reasons. "
+                    "Please revise your question and try again."
+                )
         except Exception as e:
             logger.error(f"[ModelArmorGuard] user prompt screen error: {e}")
         return None
@@ -195,7 +198,10 @@ class ModelArmorGuard:
             )
             _result = self.client.sanitize_model_response(request=req)
             if self._blocked(result=_result):
-                return self._block_response("很抱歉，我的回覆因安全考量被過濾，請換個方式詢問。")
+                return self._block_response(
+                    "Sorry, my response was filtered for safety reasons. "
+                    "Please try asking in a different way."
+                )
         except Exception as e:
             logger.error(f"[ModelArmorGuard] response screen error: {e}")
         return None

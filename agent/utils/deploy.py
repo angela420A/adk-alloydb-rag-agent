@@ -51,30 +51,31 @@ except Exception as e:
 #                               entrypoint_object: str) -> list[dict[str,
 #                                                                    Any]]:
 #     """
-#     【方案 B：動態自檢產生 class_methods (Dynamic Introspection)】
-#     參考 Google `agents-cli` 的底層機制：
-#     1. 在本地動態載入 entrypoint_module 中的 entrypoint_object。
-#     2. 呼叫 _agent_engines_utils._get_registered_operations(agent=obj)。
-#     3. 透過 _agent_engines_utils._generate_class_methods_spec_or_raise 自動產生 OpenAPI Schema。
-#     4. 將生成的 spec 轉換成 dict 傳給 Vertex AI Agent Engine。
+#     Option B: generate class_methods via dynamic introspection.
+#     Based on the Google agents-cli approach:
+#     1. Dynamically load entrypoint_object from entrypoint_module locally.
+#     2. Call _agent_engines_utils._get_registered_operations(agent=obj).
+#     3. Auto-generate OpenAPI schema via
+#        _agent_engines_utils._generate_class_methods_spec_or_raise.
+#     4. Convert the generated specs to dicts for Vertex AI Agent Engine.
 #     """
 #     logging.info(
 #         f"🔍 Introspecting agent class methods from {entrypoint_module}.{entrypoint_object}..."
 #     )
-
-#     # 確保當前目錄在 Python sys.path 中
+#
+#     # Ensure the current directory is on sys.path
 #     if "." not in sys.path:
 #         sys.path.insert(0, ".")
-
+#
 #     try:
 #         module = importlib.import_module(entrypoint_module)
 #         obj = getattr(module, entrypoint_object)
-
-#         # 若物件為 Coroutine (非同步實例)，先予以執行解析
+#
+#         # If the object is a coroutine, resolve it first
 #         if inspect.iscoroutine(obj):
 #             obj = asyncio.run(obj)
-
-#         # 透過 Vertex AI 內建工具自動萃取已註冊的 operations
+#
+#         # Extract registered operations with Vertex AI built-in helpers
 #         ops = _agent_engines_utils._get_registered_operations(agent=obj)
 #         specs = _agent_engines_utils._generate_class_methods_spec_or_raise(
 #             agent=obj,
@@ -101,14 +102,14 @@ def _load_manifest_config(
 ) -> tuple[dict[str,
                 Any],
            str | None]:
-    """讀取對應環境的 manifest.yaml 取得專案靜態配置。
+    """Load static project config from the environment's manifest.yaml.
 
-    優先搜尋順序:
-      1. 明確指定的 manifest_path (例如 CLI 傳入 --manifest)
-      2. manifests/agent-manifest.{app_env}.yaml (標準環境目錄)
-      3. agent-manifest.{app_env}.yaml (根目錄環境檔案)
-      4. manifests/agent-{app_env}-manifest.yaml (舊版格式相容)
-      5. agents-cli-manifest.yaml (預設/相容舊檔名)
+    Search order:
+      1. Explicit manifest_path (e.g. CLI --manifest)
+      2. manifests/agent-manifest.{app_env}.yaml (standard env path)
+      3. agent-manifest.{app_env}.yaml (repo-root env file)
+      4. manifests/agent-{app_env}-manifest.yaml (legacy layout)
+      5. agents-cli-manifest.yaml (default / legacy filename)
     """
     candidates = []
     if manifest_path:
@@ -148,12 +149,12 @@ def _resolve_python_version(
     cli_version: str | None,
     manifest_version: str | None,
 ) -> str | None:
-    """決定 Agent Runtime 使用的 Python 版本。
+    """Resolve the Python version used by Agent Runtime.
 
-    優先順序:
-      1. CLI 參數 (--python-version)
-      2. 專案根目錄的 .python-version 檔案
-      3. agents-cli-manifest.yaml 中的 python_version
+    Priority:
+      1. CLI flag (--python-version)
+      2. .python-version file at the project root
+      3. python_version in agents-cli-manifest.yaml
     """
     if cli_version:
         v = cli_version.strip()
@@ -179,7 +180,7 @@ def _resolve_python_version(
 
 
 def _parse_key_value_pairs(kv_string: str | None) -> dict[str, str]:
-    """解析以逗號分隔的 KEY=VALUE 字串為字典。"""
+    """Parse a comma-separated KEY=VALUE string into a dict."""
     result = {}
     if not kv_string:
         return result
@@ -198,7 +199,7 @@ def _parse_key_value_pairs(kv_string: str | None) -> dict[str, str]:
 
 
 def _parse_secrets(secrets_string: str | None) -> dict[str, dict[str, str]]:
-    """解析 Secret Manager 密鑰規格 (ENV_VAR=SECRET_NAME 或 ENV_VAR=SECRET_NAME:VERSION)。"""
+    """Parse Secret Manager specs (ENV_VAR=SECRET_NAME or ENV_VAR=SECRET_NAME:VERSION)."""
     raw = _parse_key_value_pairs(secrets_string)
     result = {}
     for key, spec in raw.items():
@@ -217,14 +218,14 @@ def _build_runtime_env_vars(
                        str]],
 ) -> dict[str,
           Any]:
-    """組裝 Agent Engine 執行期的環境變數。"""
+    """Build runtime environment variables for Agent Engine."""
     env_vars: dict[str,
                    Any] = {
                        "GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY": "true",
                        "TZ": "Asia/Taipei",
                    }
 
-    # 自動透傳常用環境變數
+    # Auto-passthrough common environment variables
     passthrough_keys = [
         "APP_ENV",
         "PROJECT_NAME",
@@ -244,7 +245,7 @@ def _build_runtime_env_vars(
     env_vars.update(custom_vars)
     env_vars.update(secrets)
 
-    # 過濾空字串避免 API 報錯
+    # Drop empty strings so the API does not reject them
     return {k: v for k, v in env_vars.items() if v is not None and v != ""}
 
 
@@ -253,7 +254,7 @@ def _introspect_class_methods(
     entrypoint_object: str,
 ) -> list[dict[str,
                Any]]:
-    """動態自檢 Agent 實例以提取已註冊的 operations 及 OpenAPI Schema。"""
+    """Dynamically introspect the agent instance for registered operations and OpenAPI schemas."""
     logging.info(
         f"🔍 Introspecting agent class methods from {entrypoint_module}.{entrypoint_object}..."
     )
@@ -568,7 +569,7 @@ def deploy(
     manifest_name = manifest_data.get("name")
     project_name = os.getenv("PROJECT_NAME") or manifest_name or "agent"
 
-    # 決定基本參數 (優先序: CLI 參數 > .env > YAML Manifest)
+    # Resolve base params (priority: CLI > .env > YAML manifest)
     project = project or os.getenv("GOOGLE_CLOUD_PROJECT")
     if not project:
         raise click.ClickException(
@@ -604,13 +605,13 @@ def deploy(
         f"{manifest_dir}/utils/.requirements.txt"
     )
 
-    # 解析 Python Version (CLI > .python-version > manifest > 系統預設)
+    # Resolve Python version (CLI > .python-version > manifest > system default)
     python_version = _resolve_python_version(
         cli_version=python_version,
         manifest_version=manifest_data.get("python_version"),
     )
 
-    # 運算資源設定
+    # Runtime resource settings
     res_cfg = manifest_data.get("runtime_resources", {})
     cpu = cpu or res_cfg.get("cpu", "4")
     memory = memory or res_cfg.get("memory", "8Gi")

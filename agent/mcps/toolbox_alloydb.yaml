@@ -1,5 +1,5 @@
 sources:
-  agentic_agent_kb_stag:
+  agentic_agent_kb:
     kind: "postgres"
     host: "127.0.0.1"
     port: "8888"
@@ -8,33 +8,78 @@ sources:
     password: "${TF_VAR_alloydb_password}"
 
 tools:
-  search_faq_articles:
+  search_hotels_by_name:
     kind: postgres-sql
-    source: agentic_agent_kb_stag
-    description: "Search FAQ articles by semantic text query using Vertex AI vector embeddings. Returns the top 5 most relevant articles with article IDs, titles, clean markdown content, hyperlinks, image URLs, and metadata including brand name, category name, and section name."
+    source: agentic_agent_kb
+    description: "Search for hotels based on name."
     parameters:
-      - name: search_text
+      - name: name
         type: string
-        description: "The user query, problem description, or search keywords to find relevant FAQ articles."
+        description: "The name of the hotel."
     statement: |
-      SELECT
-        zendesk_article_id,
-        title,
-        content,
-        hyperlinks,
-        image_urls,
-        metadata ->> 'brand_name' as brand_name,
-        metadata ->> 'category_name' as category_name,
-        metadata ->> 'section_name' as section_name
-      FROM
-        rag_kb_documents
-      WHERE
-        is_deleted = FALSE AND source_type = 'faq_articles'
-      ORDER BY
-        content_embedding <=> embedding('text-multilingual-embedding-002', $1)::vector
-      LIMIT
-        5;
+      SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+
+  search_hotels_by_location:
+    kind: postgres-sql
+    source: agentic_agent_kb
+    description: "Search for hotels based on location."
+    parameters:
+      - name: location
+        type: string
+        description: "The location of the hotel."
+    statement: |
+      SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
+
+  book_hotel:
+    kind: postgres-sql
+    source: agentic_agent_kb
+    description: >-
+      Book a hotel by its ID. If the hotel is successfully booked, returns a NULL,
+      raises an error if not.
+    parameters:
+      - name: hotel_id
+        type: string
+        description: "The ID of the hotel to book."
+    statement: |
+      UPDATE hotels SET booked = B'1' WHERE id = $1;
+
+  update_hotel:
+    kind: postgres-sql
+    source: agentic_agent_kb
+    description: >-
+      Update a hotel's check-in and check-out dates by its ID. Returns a message
+      indicating whether the hotel was successfully updated or not.
+    parameters:
+      - name: hotel_id
+        type: string
+        description: "The ID of the hotel to update."
+      - name: checkin_date
+        type: string
+        description: "The new check-in date of the hotel."
+      - name: checkout_date
+        type: string
+        description: "The new check-out date of the hotel."
+    statement: |
+      UPDATE hotels
+      SET checkin_date = CAST($2 AS date),
+          checkout_date = CAST($3 AS date)
+      WHERE id = $1;
+
+  cancel_hotel:
+    kind: postgres-sql
+    source: agentic_agent_kb
+    description: "Cancel a hotel by its ID."
+    parameters:
+      - name: hotel_id
+        type: string
+        description: "The ID of the hotel to cancel."
+    statement: |
+      UPDATE hotels SET booked = B'0' WHERE id = $1;
 
 toolsets:
-  faq_toolset:
-    - search_faq_articles
+  hotel_toolset:
+    - search_hotels_by_name
+    - search_hotels_by_location
+    - book_hotel
+    - update_hotel
+    - cancel_hotel

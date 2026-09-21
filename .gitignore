@@ -5,7 +5,7 @@
 *.tfstate.*
 *.tfplan
 crash.log
-# 注意：.terraform.lock.hcl 要 commit，不要 ignore
+# Note: commit .terraform.lock.hcl; do not ignore it
 
 # ToolBox
 toolbox

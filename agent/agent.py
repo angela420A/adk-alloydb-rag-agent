@@ -17,7 +17,7 @@ from agent.utils.env import load_env
 load_env()
 
 from agent.plugins.model_armor import ModelArmorPlugin
-from agent.prompt import SYSTEM_INSTRUCTION_2_5
+from agent.prompt import SYSTEM_INSTRUCTION
 from agent.utils import config
 
 # from agent.guards.model_armor_guard import create_guard
@@ -61,7 +61,7 @@ def create_agent() -> Agent:
   return Agent(
       name='agentic-agent',
       model=config.MODELS.root_agent_model,
-      instruction=SYSTEM_INSTRUCTION_2_5,
+      instruction=SYSTEM_INSTRUCTION,
       tools=[toolset]
   )
 

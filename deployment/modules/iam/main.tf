@@ -143,9 +143,9 @@ resource "google_secret_manager_secret_iam_member" "toolbox_identity" {
 
 
 # MCP Toolbox tools.yaml
-# Toolbox 啟動時讀 /app/tools.yaml 來知道要暴露哪些 MCP tools。
-# 這裡將 agent/mcps/<env>/toolbox_alloydb.yaml 的內容寫入 Secret Manager，
-# 再由 Cloud Run 以 volume 的方式掛載進容器。
+# At startup, Toolbox reads /app/tools.yaml to learn which MCP tools to expose.
+# Store the contents of agent/mcps/<env>/toolbox_alloydb.yaml in Secret Manager,
+# then mount it into the Cloud Run container as a volume.
 resource "google_secret_manager_secret" "tools_yaml" {
   project   = var.project_id
   secret_id = "toolbox-tools-${var.env}"
@@ -160,13 +160,14 @@ resource "google_secret_manager_secret" "tools_yaml" {
   }
 }
 
-# 使用 file() 而非 templatefile()：yaml 裡的 ${...} 是給 Toolbox 執行時替換用的，
-# 用 templatefile() 會讓 Terraform 先去解析它並報錯。
+# Use file() instead of templatefile(): ${...} placeholders in the YAML are
+# substituted by Toolbox at runtime. templatefile() would make Terraform try
+# to interpolate them first and fail.
 resource "google_secret_manager_secret_version" "tools_yaml" {
   secret      = google_secret_manager_secret.tools_yaml.id
   secret_data = file(var.tools_yaml_path)
 
-  # 不加 ignore_changes：tools.yaml 是設定檔，改了就要推新版本
+  # Do not ignore_changes: tools.yaml is config; updates should publish a new version.
 }
 
 resource "google_secret_manager_secret_iam_member" "tools_yaml_accessor" {

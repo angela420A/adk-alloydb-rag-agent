@@ -37,18 +37,18 @@ variable "alloydb_host" {
 
 variable "alloydb_cluster" {
   type        = string
-  description = "AlloyDB cluster 短名稱，對應 tools.yaml 的 ALLOYDB_CLUSTER 佔位符"
+  description = "AlloyDB cluster short name; maps to the ALLOYDB_CLUSTER placeholder in tools.yaml"
 }
 
 variable "alloydb_instance" {
   type        = string
-  description = "AlloyDB primary instance 短名稱，對應 tools.yaml 的 ALLOYDB_INSTANCE 佔位符"
+  description = "AlloyDB primary instance short name; maps to the ALLOYDB_INSTANCE placeholder in tools.yaml"
 }
 
 variable "alloydb_database" {
   type        = string
   default     = "agent_kb"
-  description = "Toolbox 連線的資料庫名稱。Terraform 不會建立這個 DB，需要事先手動 CREATE DATABASE"
+  description = "Database name Toolbox connects to. Terraform does not create it; run CREATE DATABASE manually first"
 }
 
 variable "alloydb_user" {
@@ -58,13 +58,13 @@ variable "alloydb_user" {
 
 variable "tools_yaml_secret_id" {
   type        = string
-  description = "來自 modules/iam 的 tools.yaml secret id"
+  description = "tools.yaml secret id from modules/iam"
 }
 
 variable "tools_mount_path" {
   type        = string
   default     = "/app"
-  description = "tools.yaml 的掛載目錄。跟官方文件一致用 /app"
+  description = "Mount directory for tools.yaml. Use /app to match the official docs"
 }
 
 
