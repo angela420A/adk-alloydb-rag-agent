@@ -218,12 +218,14 @@ SHOW google_ml_integration.enable_preview_ai_functions;
 SHOW scann.enable_preview_features;
 
 -- Test embedding generation via Vertex AI
-SELECT embedding('text-multilingual-embedding-002', 'hello world');
+SELECT embedding('gemini-embedding-2', 'hello world');
 ```
 
 ### 2.6 Create Sample Hotels Table
 
-Create the demo `hotels` table and load sample rows used by the MCP Toolbox hotel tools:
+Create the demo `hotels` table and load sample rows used by the MCP Toolbox hotel tools.
+
+The `embedding` column is a generated stored vector that uses the `gemini-embedding-2` model (default 3072 dimensions) so semantic hotel search can run directly in SQL.
 
 ```bash
 psql "host=127.0.0.1 port=8888 user=postgres dbname=${DB_NAME} sslmode=require" <<'SQL'
@@ -234,7 +236,14 @@ CREATE TABLE hotels(
   price_tier    VARCHAR NOT NULL,
   checkin_date  DATE    NOT NULL,
   checkout_date DATE    NOT NULL,
-  booked        BIT     NOT NULL
+  booked        BIT     NOT NULL,
+  embedding     vector(3072)
+                GENERATED ALWAYS AS (
+                  embedding(
+                    'gemini-embedding-2',
+                    name || ' ' || location || ' ' || price_tier
+                  )
+                ) STORED
 );
 
 INSERT INTO hotels(id, name, location, price_tier, checkin_date, checkout_date, booked)
@@ -257,6 +266,15 @@ Confirm the rows loaded:
 ```bash
 psql "host=127.0.0.1 port=8888 user=postgres dbname=${DB_NAME} sslmode=require" \
   -c "SELECT id, name, location, booked FROM hotels ORDER BY id;"
+```
+
+Optional: verify semantic nearest-neighbor search works against the generated embeddings:
+
+```sql
+SELECT id, name, location, price_tier
+FROM hotels
+ORDER BY embedding <=> embedding('gemini-embedding-2', 'luxury hotel in Basel')::vector
+LIMIT 3;
 ```
 
 ---
